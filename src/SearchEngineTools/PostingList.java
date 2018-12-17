@@ -148,4 +148,14 @@ public class PostingList {
         for(PostingEntry postingEntry:other)
             add(postingEntry);
     }
+
+    /**
+     * Only for posting lists created with this(String) which are not represented in gaps.
+     * @return
+     */
+    public PostingEntry RemoveFirst(){
+        if(!postingList.isEmpty())
+            return postingList.remove(0);
+        return null;
+    }
 }
