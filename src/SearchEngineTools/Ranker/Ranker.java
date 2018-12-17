@@ -14,7 +14,7 @@ import java.util.*;
 public class Ranker {
     private List <Document> rankedDocs;
     private Map<String, Pair<Integer, Integer>> dictionary;
-    private int numOfDocumentsToReturn=3;
+    private int numOfDocumentsToReturn=50;
     private  String postingFilesPath;
     private  boolean useStemming;
     private int numOfDocs;
@@ -60,7 +60,8 @@ public class Ranker {
         PriorityQueue<Pair<PostingEntry,Integer>> documentQueue=new PriorityQueue<>(Comparator.comparingInt(o -> o.getKey().getDocID()));
 
         for (int i = 0; i <postingLists.size() ; i++) {
-            documentQueue.add(new Pair<>(postingLists.get(i).RemoveFirst(),i));
+            if(postingLists.get(i)!=null)
+                documentQueue.add(new Pair<>(postingLists.get(i).RemoveFirst(),i));
         }
         //for each document
         while(!documentQueue.isEmpty()){
@@ -74,6 +75,7 @@ public class Ranker {
                     addToRankedDocs(currDocument);
                 }
                 currDocument=nextDocument;
+                currDocument.loadDocInfo();
             }
             //rank document
             rankDocument(currDocument,queryTerms.get(docTermPair.getValue()),currPostingEntry.getTermTF());
@@ -95,14 +97,12 @@ public class Ranker {
      * @param termTF
      */
     private void rankDocument(Document document,ATerm term, int termTF) {
-//        int currDocumentRank=currDocument.getDocID()+currDocument.getDocRank();
-//        currDocument.setDocRank(currDocumentRank);
         double k=1.6;
         double b=0.75;
         double df=dictionary.get(term.getTerm()).getKey();
         double idf=Math.log((numOfDocs+1)/df);
-        int documentLenght=document.getNumOfUniqeTerms();
-        double avgDocLenght=59/4;
+        int documentLenght=document.getDocLength();
+        double avgDocLenght=Document.getAvgDocLength();
         double rank=term.getOccurrences()*(k+1)*termTF/(termTF+k*(1-b+b*(documentLenght/avgDocLenght)))*idf;
         document.setDocRank(document.getDocRank()+rank);
     }
@@ -128,13 +128,13 @@ public class Ranker {
     private PostingList getTermPostingList(ATerm querryTerm) {
         if(dictionary.containsKey(querryTerm.getTerm())){
             int postingListPointer=dictionary.get(querryTerm.getTerm()).getValue();
-            String postingListS=readPostinList(postingListPointer);
+            String postingListS= readPostingList(postingListPointer);
             return new PostingList(postingListS);
         }
         return null;
     }
 
-    private String readPostinList(int postingListPointer) {
+    private String readPostingList(int postingListPointer) {
         String line=null ;
         String fileSeparator=System.getProperty("file.separator");
         String file_Name;
@@ -155,6 +155,8 @@ public class Ranker {
     }
 
     private void addToRankedDocs(Document document){
+        if(document==null)
+            return;
         if(maxRankedDocs.size()<numOfDocumentsToReturn){
             maxRankedDocs.add(document);
             minRankedDocs.add(document);

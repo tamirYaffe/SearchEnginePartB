@@ -26,7 +26,8 @@ public class Document{
     //added
     private List<String> docLines;
     private double docRank;
-    private static int avgDocLenght;
+    private int docLength;
+    private static double avgDocLength;
 
     /**
      * A constructor for docId.
@@ -90,7 +91,7 @@ public class Document{
     /**
      * Loads the document startLine, numOfLines and path from documents file to class vars.
      */
-    private void loadDocInfo() {
+    public void loadDocInfo() {
         String[] line ;
         String fileSeparator=System.getProperty("file.separator");
         String file_Name;
@@ -106,6 +107,7 @@ public class Document{
             line=br.readLine().split(" ");
             max_tf= Math.toIntExact(Long.valueOf(line[0]));
             numOfUniqeTerms= Math.toIntExact(Long.valueOf(line[1]));
+            docLength =Math.toIntExact(Long.valueOf(line[2]));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -138,7 +140,7 @@ public class Document{
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw))
         {
-            String toWrite=max_tf+" "+numOfUniqeTerms;
+            String toWrite=max_tf+" "+numOfUniqeTerms+" "+ docLength;
             if(docCity!=null)
                 toWrite+=" "+docCity;
             out.println(toWrite);
@@ -166,9 +168,6 @@ public class Document{
     }
 
     public int getNumOfUniqeTerms() {
-        if(numOfUniqeTerms==0){
-            loadDocInfo();
-        }
         return numOfUniqeTerms;
     }
 
@@ -180,8 +179,11 @@ public class Document{
         return docRank;
     }
 
-    public static int getAvgDocLenght() {
-        return avgDocLenght;
+    public static double getAvgDocLength() {
+        return avgDocLength;
+    }
+    public int getDocLength() {
+        return docLength;
     }
     //</editor-fold>
 
@@ -194,13 +196,16 @@ public class Document{
         this.docRank = docRank;
     }
 
-    public static void setAvgDocLenght(int avgDocLenght) {
-        Document.avgDocLenght = avgDocLenght;
+    public static void setAvgDocLength(double avgDocLength) {
+        Document.avgDocLength = avgDocLength;
     }
 
     public static void setUseStemming(boolean useStemming) {
         Document.useStemming = useStemming;
     }
 
-    //</editor-fold>
+    public void setDocLength(int docLength) {
+        this.docLength = docLength;
+    }
+//</editor-fold>
 }

@@ -26,13 +26,15 @@ public class ReadFile {
     private String postingFilesPath;
     private String fileSeparator = System.getProperty("file.separator");
     private boolean useStemming;
+    //added
+    private int documentsSumLenght;
 
     //for documents
     private List<String> documentsBuffer = new ArrayList<>();
     private int documentBufferSize;
 
     //threads use
-    private ConcurrentBuffer<Pair<Iterator<ATerm>, Integer>> PIBuffer = new ConcurrentBuffer<>(Integer.MAX_VALUE);
+    private ConcurrentBuffer<Pair<Iterator<ATerm>, Document>> PIBuffer = new ConcurrentBuffer<>(Integer.MAX_VALUE);
     private Mutex mutex = new Mutex();
 
     /**
@@ -45,6 +47,8 @@ public class ReadFile {
     public ReadFile(Indexer indexer, String corpusPath, String postingFilesPath, boolean useStemming) {
         this.corpusPath = corpusPath;
         this.postingFilesPath = postingFilesPath;
+        //added
+        Document.postingFilesPath=postingFilesPath;
         this.indexer = indexer;
         if (useStemming)
             parse = new ParseWithStemming();
@@ -85,7 +89,7 @@ public class ReadFile {
 
         writeDocumentsToDisk();
         System.out.println("stoping indexer");
-        PIBuffer.add(new Pair<>(null, -1));
+        PIBuffer.add(new Pair<>(null, new Document(-1)));
         //write remaining posting lists to disk
         mutex.lock();
         try {
@@ -95,6 +99,7 @@ public class ReadFile {
             e.printStackTrace();
         }
         deletePrevFiles();
+        Document.setAvgDocLength(documentsSumLenght/numOfDocs);
         return numOfDocs;
     }
 
@@ -177,11 +182,14 @@ public class ReadFile {
             endLineNumInt++;
             numOfLinesInt++;
             if (line.equals("</DOC>")) {
-                createDoc(filePath, startLineNumInt, numOfLinesInt);
                 Collection<ATerm> terms = parse.parseDocument(docLines);
-
+                int docLength=parse.getLastParsedDocumentLength();
+                documentsSumLenght+=docLength;
+                createDoc(filePath, startLineNumInt, numOfLinesInt);
                 //add the parse terms to the producer-consumer buffer.
-                PIBuffer.add(new Pair(terms.iterator(), numOfDocs));
+                Document document=new Document(numOfDocs);
+                document.setDocLength(docLength);
+                PIBuffer.add(new Pair(terms.iterator(), document));
 
                 startLineNumInt = endLineNumInt + 1;
                 numOfLinesInt = 0;
@@ -201,8 +209,8 @@ public class ReadFile {
         Thread createIndex = new Thread(() -> {
             mutex.lock();
             while (true) {
-                Pair<Iterator<ATerm>, Integer> toIndex = PIBuffer.get();
-                if (toIndex.getValue() == -1) {
+                Pair<Iterator<ATerm>, Document> toIndex = PIBuffer.get();
+                if (toIndex.getValue().getDocID() == -1) {
                     break;
                 }
                 indexer.createInvertedIndex(toIndex.getKey(), toIndex.getValue());
