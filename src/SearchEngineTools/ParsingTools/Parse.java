@@ -51,7 +51,12 @@ public class Parse {
 
     private ParsingHashMap cityNames;
 
-    //private static CountryService countryService = CountryService.getInstance();
+    private int lastParsedDocumentLength = -1;
+
+    public int getLastParsedDocumentLength() {
+        return lastParsedDocumentLength;
+    }
+//private static CountryService countryService = CountryService.getInstance();
 
     protected Mutex mutex = new Mutex();
 
@@ -307,9 +312,11 @@ public class Parse {
      */
     protected Collection<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
         ArrayList<ATerm> toReturn = new ArrayList<>(occurrencesOfTerms.size());
+        lastParsedDocumentLength = 0;
         for (String termString:occurrencesOfTerms.keySet()) {
             ATerm term = occurrencesOfTerms.get(termString);
             toReturn.add(term);
+            lastParsedDocumentLength+=term.getOccurrences();
         }
         return toReturn;
     }
