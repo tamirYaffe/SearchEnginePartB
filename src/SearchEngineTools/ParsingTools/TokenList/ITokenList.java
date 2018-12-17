@@ -1,4 +1,6 @@
-package SearchEngineTools.ParsingTools;
+package SearchEngineTools.ParsingTools.TokenList;
+
+import SearchEngineTools.ParsingTools.Token;
 
 import java.util.List;
 
