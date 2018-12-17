@@ -2,6 +2,9 @@ package SearchEngineTools.ParsingTools;
 
 
 import SearchEngineTools.ParsingTools.Term.*;
+import SearchEngineTools.ParsingTools.TokenList.DocumentTokenList;
+import SearchEngineTools.ParsingTools.TokenList.ITokenList;
+import SearchEngineTools.ParsingTools.TokenList.TextTokenList;
 import javafx.util.Pair;
 import sun.awt.Mutex;
 import SearchEngineTools.ParsingTools.Term.Value;

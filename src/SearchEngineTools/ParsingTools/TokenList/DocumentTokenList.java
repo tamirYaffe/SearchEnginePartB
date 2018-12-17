@@ -1,7 +1,8 @@
-package SearchEngineTools.ParsingTools;
+package SearchEngineTools.ParsingTools.TokenList;
 
 
 import SearchEngineTools.ParsingTools.Term.CityTerm;
+import SearchEngineTools.ParsingTools.Token;
 import eu.fayder.restcountries.v1.domain.Country;
 import eu.fayder.restcountries.v1.rest.CountryService;
 
@@ -307,7 +308,6 @@ public class DocumentTokenList implements ITokenList {
         this.isText=false;
         this.documentLines=null;
         this.cityTerm=null;
-        foundFirstTextLine=false;
     }
 
     @Override

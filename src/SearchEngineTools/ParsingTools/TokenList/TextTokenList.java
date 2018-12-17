@@ -1,4 +1,4 @@
-package SearchEngineTools.ParsingTools;
+package SearchEngineTools.ParsingTools.TokenList;
 
 public class TextTokenList extends DocumentTokenList {
 
