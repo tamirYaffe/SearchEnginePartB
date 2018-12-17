@@ -8,18 +8,25 @@ import java.util.List;
  * A class that represents a document.
  *
  */
-public class Document {
+public class Document{
     //static vars
     public static String corpusPath;
+    public static String postingFilesPath;
     private static boolean useStemming;
 
     private int docID;
+
     private String path;
-    private Long startLine;
-    private Long numOfLines;
+    private int startLine;
+    private int numOfLines;
     private int max_tf;
     private int numOfUniqeTerms;
     private  String docCity;
+
+    //added
+    private List<String> docLines;
+    private double docRank;
+    private static int avgDocLenght;
 
     /**
      * A constructor for docId.
@@ -27,7 +34,9 @@ public class Document {
      */
     public Document(int docID) {
         this.docID =docID;
+        docLines=null;
     }
+
 
     /**
      * Returns the document lines.
@@ -53,18 +62,50 @@ public class Document {
     }
 
     /**
-     * Loads the document startLine, numOfLines and path from documentsInfo file to class vars.
+     * Loads the document startLine, numOfLines and path from documents file to class vars.
      */
     private void loadDocPointerInfo() {
         String[] line ;
-        try (BufferedReader br = new BufferedReader(new FileReader("Documents.txt"))) {
-            for (int i = 0; i < docID -1; i++)
+        String fileSeparator=System.getProperty("file.separator");
+        String file_Name;
+        if(useStemming)
+            file_Name="DocumentsStemming.txt";
+        else
+            file_Name="Documents.txt";
+        String pathName=postingFilesPath+fileSeparator+file_Name;
+        File file = new File(pathName);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            for (int i = 0; i < docID; i++)
                 br.readLine();
             line=br.readLine().split(" ");
             String fileName=line[0];
-            startLine= Long.valueOf(line[1]);
-            numOfLines= Long.valueOf(line[2]);
+            startLine= Math.toIntExact(Long.valueOf(line[1]));
+            numOfLines= Math.toIntExact(Long.valueOf(line[2]));
             path=corpusPath+fileName;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Loads the document startLine, numOfLines and path from documents file to class vars.
+     */
+    private void loadDocInfo() {
+        String[] line ;
+        String fileSeparator=System.getProperty("file.separator");
+        String file_Name;
+        if(useStemming)
+            file_Name="DocumentsInfoStemming.txt";
+        else
+            file_Name="DocumentsInfo.txt";
+        String pathName=postingFilesPath+fileSeparator+file_Name;
+        File file = new File(pathName);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            for (int i = 0; i < docID; i++)
+                br.readLine();
+            line=br.readLine().split(" ");
+            max_tf= Math.toIntExact(Long.valueOf(line[0]));
+            numOfUniqeTerms= Math.toIntExact(Long.valueOf(line[1]));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -106,13 +147,60 @@ public class Document {
         }
     }
 
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof Document))
+            return false;
+        Document other= (Document) obj;
+        return this.docID==other.docID;
+    }
+
+    //<editor-fold desc="Getters">
+    public List<String> getDocLines() {
+        if(docLines==null){
+            docLines=getDocumentsLines();
+        }
+        return docLines;
+    }
+
+    public int getNumOfUniqeTerms() {
+        if(numOfUniqeTerms==0){
+            loadDocInfo();
+        }
+        return numOfUniqeTerms;
+    }
+
+    public int getDocID() {
+        return docID;
+    }
+
+    public double getDocRank() {
+        return docRank;
+    }
+
+    public static int getAvgDocLenght() {
+        return avgDocLenght;
+    }
+    //</editor-fold>
+
     //<editor-fold desc="setters">
     public void setDocCity(String docCity) {
         this.docCity = docCity;
     }
 
+    public void setDocRank(double docRank) {
+        this.docRank = docRank;
+    }
+
+    public static void setAvgDocLenght(int avgDocLenght) {
+        Document.avgDocLenght = avgDocLenght;
+    }
+
     public static void setUseStemming(boolean useStemming) {
         Document.useStemming = useStemming;
     }
+
     //</editor-fold>
 }

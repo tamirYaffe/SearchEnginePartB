@@ -31,6 +31,14 @@ public class PostingEntry {
         return docID+" "+termTF;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof PostingEntry))
+            return false;
+        PostingEntry other= (PostingEntry) obj;
+        return this.docID==other.docID;
+    }
+
     public void setDocID(int docID) {
         this.docID = docID;
     }
