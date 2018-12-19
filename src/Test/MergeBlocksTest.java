@@ -18,7 +18,7 @@ public class MergeBlocksTest {
         boolean useStemming=false;
         String postingListsPath="/Users/tamiryaffe/Desktop/postingFiles";
         Indexer indexer = new Indexer(1048576 * 10);
-        ReadFile readFile = new ReadFile(indexer, "/Users/tamiryaffe/Desktop/corpus2", postingListsPath, useStemming);
+        ReadFile readFile = new ReadFile(indexer, "/Users/tamiryaffe/Desktop/corpus", postingListsPath, useStemming);
         String path=postingListsPath;
         if(path.length()==0)
             return;
@@ -46,25 +46,24 @@ public class MergeBlocksTest {
         List<ATerm> queryTerms=new ArrayList<>();
         WordTerm wordTerm;
 
-        wordTerm=new WordTerm(new Token("tamir",0));
+        wordTerm=new WordTerm(new Token("chinese",0));
         wordTerm.setOccurrences(1);
         queryTerms.add(wordTerm);
 
-        wordTerm=new WordTerm(new Token("yaniv",0));
+        wordTerm=new WordTerm(new Token("economically",0));
         wordTerm.setOccurrences(1);
         queryTerms.add(wordTerm);
 
-        wordTerm=new WordTerm(new Token("dan",0));
+        wordTerm=new WordTerm(new Token("achievements",0));
         wordTerm.setOccurrences(1);
         queryTerms.add(wordTerm);
+
 
         List<Document> rankedDocs=ranker.rankDocuments(queryTerms);
         Iterator<Document> iterator=rankedDocs.iterator();
         while(iterator.hasNext()){
             Document document=iterator.next();
-            System.out.println(document.getDocID()+": "+document.getDocRank());
-
+            System.out.println(document.getDOCNO()+": "+document.getDocRank());
         }
     }
-
 }

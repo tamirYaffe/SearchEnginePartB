@@ -28,6 +28,7 @@ public class Document{
     private double docRank;
     private int docLength;
     private static double avgDocLength;
+    private String DOCNO;
 
     /**
      * A constructor for docId.
@@ -108,6 +109,8 @@ public class Document{
             max_tf= Math.toIntExact(Long.valueOf(line[0]));
             numOfUniqeTerms= Math.toIntExact(Long.valueOf(line[1]));
             docLength =Math.toIntExact(Long.valueOf(line[2]));
+            if(line.length>3)
+                DOCNO=line[3];
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -141,6 +144,8 @@ public class Document{
             PrintWriter out = new PrintWriter(bw))
         {
             String toWrite=max_tf+" "+numOfUniqeTerms+" "+ docLength;
+            if(DOCNO!=null)
+                toWrite+=" "+DOCNO;
             if(docCity!=null)
                 toWrite+=" "+docCity;
             out.println(toWrite);
@@ -167,6 +172,10 @@ public class Document{
         return docLines;
     }
 
+    public String getDOCNO() {
+        return DOCNO;
+    }
+
     public int getNumOfUniqeTerms() {
         return numOfUniqeTerms;
     }
@@ -190,6 +199,10 @@ public class Document{
     //<editor-fold desc="setters">
     public void setDocCity(String docCity) {
         this.docCity = docCity;
+    }
+
+    public void setDOCNO(String DOCNO) {
+        this.DOCNO = DOCNO;
     }
 
     public void setDocRank(double docRank) {
