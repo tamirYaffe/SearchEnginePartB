@@ -176,9 +176,11 @@ public class ReadFile {
         int startLineNumInt = 0;
         int endLineNumInt = 0;
         int numOfLinesInt = 0;
-        int s = 0;
+        String docNO=null;
         for (String line : fileList) {
             docLines.add(line);
+            if(line.contains("<DOCNO>"))
+                docNO=line.substring(8,line.length()-9);
             endLineNumInt++;
             numOfLinesInt++;
             if (line.equals("</DOC>")) {
@@ -189,6 +191,7 @@ public class ReadFile {
                 //add the parse terms to the producer-consumer buffer.
                 Document document=new Document(numOfDocs);
                 document.setDocLength(docLength);
+                document.setDOCNO(docNO);
                 PIBuffer.add(new Pair(terms.iterator(), document));
 
                 startLineNumInt = endLineNumInt + 1;
