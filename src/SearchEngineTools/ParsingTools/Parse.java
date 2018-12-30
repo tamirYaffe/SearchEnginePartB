@@ -4,7 +4,6 @@ package SearchEngineTools.ParsingTools;
 import SearchEngineTools.ParsingTools.Term.*;
 import SearchEngineTools.ParsingTools.TokenList.DocumentTokenList;
 import SearchEngineTools.ParsingTools.TokenList.ITokenList;
-import SearchEngineTools.ParsingTools.TokenList.QueryTokenList;
 import SearchEngineTools.ParsingTools.TokenList.TextTokenList;
 import SearchEngineTools.datamuse.DatamuseQuery;
 import javafx.util.Pair;
@@ -211,7 +210,7 @@ public class Parse {
 
 
     public List<ATerm> parseQuery(List<String> query, boolean spellCheck, int maxSynonyms){
-        QueryTokenList queryTokenList = new QueryTokenList();
+        TextTokenList queryTokenList = new TextTokenList();
         queryTokenList.initialize(query,currencySymbols,delimitersToSplitWordBy,stopWords);
         return parse(queryTokenList,new HashMap<>(),spellCheck,maxSynonyms);
     }
@@ -859,8 +858,8 @@ public class Parse {
 
     private void addSynonyms(Token token, int maxSynonyms, List<ATerm> addTo) {
         String tokenString = token.getTokenString();
-        List<String> synonyms = datamuseQuery.synonyms(tokenString,maxSynonyms);
-        for(int i=0; i<synonyms.size(); i++){
+        List<String> synonyms = Character.isUpperCase(tokenString.charAt(0))?null:datamuseQuery.synonyms(tokenString,maxSynonyms);
+        for(int i=0; synonyms!=null && i<synonyms.size(); i++){
             WordTerm synonym = createWordTerm(new Token(synonyms.get(i),-1));
             addTo.add(synonym);
         }
@@ -872,11 +871,12 @@ public class Parse {
         List<String> correctSpellingAsList = datamuseQuery.spelledSimilar(tokenString,1);
         String correctSpelling = correctSpellingAsList.isEmpty()?null:correctSpellingAsList.get(0);
         if(correctSpelling!=null && !tokenString.toLowerCase().equals(correctSpelling)){
-            WordTerm correctlySpelledTerm = createWordTerm(new Token(correctSpelling,-1));
+            correctSpelling = Character.isUpperCase(tokenString.charAt(0)) ? correctSpelling.toUpperCase() : correctSpelling;
+            WordTerm correctlySpelledTerm = createWordTerm(new Token(correctSpelling,token.getPosition()));
             if(correctlySpelledTerm!=null){
                 addTo.add(correctlySpelledTerm);
                 if(addSynonyms)
-                    addSynonyms(new Token(correctSpelling,-1),maxSynonyms,addTo);
+                    addSynonyms(new Token(correctSpelling,token.getPosition()),maxSynonyms,addTo);
             }
         }
     }
