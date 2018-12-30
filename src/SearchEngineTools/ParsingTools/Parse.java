@@ -236,12 +236,15 @@ public class Parse {
         //get final collection of terms
         Collection<ATerm> toReturn = getFinalTermCollection(occurrencesAndPositionsOfTerms);
         //clear tokenlist
-        tokenList.clear();
+        clear();
         //return terms
         return toReturn;
 
     }
 
+    protected void clear(){
+        tokenList.clear();
+    }
     private void getDocCity(CityTerm documentCityTerm,Map<String, ATerm> occurrencesAndPositionsOfTerms){
         if(documentCityTerm==null)
             return;
