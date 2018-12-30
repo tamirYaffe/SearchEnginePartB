@@ -1,11 +1,10 @@
 package SearchEngineTools;
 
-
-import javafx.util.Pair;
-
 import SearchEngineTools.ParsingTools.Term.ATerm;
 import SearchEngineTools.ParsingTools.Term.CityTerm;
 import SearchEngineTools.ParsingTools.Term.WordTerm;
+import javafx.util.Pair;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,9 +67,10 @@ public class Indexer {
      * Creates the dictionary and posting files.
      *
      * @param terms - list of the document terms(after parse).
-     * @param document - the document object of the terms list.
+     * @param docID - the docId of the terms list.
      */
-    public void createInvertedIndex(Iterator<ATerm> terms, Document document) {
+    public void createInvertedIndex(Iterator<ATerm> terms, int docID) {
+        Document document = new Document(docID);
         while (terms.hasNext()) {
             ATerm aTerm = terms.next();
             if (aTerm.getTerm().equals("."))
@@ -80,7 +80,7 @@ public class Indexer {
             String term = aTerm.getTerm();
             if (aTerm instanceof CityTerm) {
                 document.setDocCity(term);
-                addToCityIndex(aTerm, document.getDocID());
+                addToCityIndex(aTerm, docID);
                 if(aTerm.getOccurrences()==0)
                     continue;
             }
@@ -95,7 +95,7 @@ public class Indexer {
 
             //add or update temp inverted index.
             PostingList postingsList;
-            PostingEntry postingEntry = new PostingEntry(document.getDocID(), termOccurrences);
+            PostingEntry postingEntry = new PostingEntry(docID, termOccurrences);
             if (!tempInvertedIndex.containsKey(term)) {
                 postingsList = new PostingList();
                 tempInvertedIndex.put(term, postingsList);
