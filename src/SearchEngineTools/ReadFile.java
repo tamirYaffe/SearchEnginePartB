@@ -3,6 +3,7 @@ package SearchEngineTools;
 import SearchEngineTools.ParsingTools.Parse;
 import SearchEngineTools.ParsingTools.ParseWithStemming;
 import SearchEngineTools.ParsingTools.Term.ATerm;
+import SearchEngineTools.Ranker.Ranker;
 import javafx.util.Pair;
 import sun.awt.Mutex;
 import org.apache.commons.io.FileUtils;
@@ -26,13 +27,16 @@ public class ReadFile {
     private String postingFilesPath;
     private String fileSeparator = System.getProperty("file.separator");
     private boolean useStemming;
+    //added
+    private int documentsSumLenght;
+    private Ranker ranker;
 
     //for documents
     private List<String> documentsBuffer = new ArrayList<>();
     private int documentBufferSize;
 
     //threads use
-    private ConcurrentBuffer<Pair<Iterator<ATerm>, Integer>> PIBuffer = new ConcurrentBuffer<>(Integer.MAX_VALUE);
+    private ConcurrentBuffer<Pair<Iterator<ATerm>, Document>> PIBuffer = new ConcurrentBuffer<>(Integer.MAX_VALUE);
     private Mutex mutex = new Mutex();
 
     /**
@@ -45,6 +49,8 @@ public class ReadFile {
     public ReadFile(Indexer indexer, String corpusPath, String postingFilesPath, boolean useStemming) {
         this.corpusPath = corpusPath;
         this.postingFilesPath = postingFilesPath;
+        //added
+        Document.postingFilesPath=postingFilesPath;
         this.indexer = indexer;
         if (useStemming)
             parse = new ParseWithStemming();
@@ -55,6 +61,10 @@ public class ReadFile {
         if (! directory.exists()){
             directory.mkdir();
         }
+    }
+
+    public void setRanker(Ranker ranker) {
+        this.ranker = ranker;
     }
 
     /**
@@ -85,7 +95,7 @@ public class ReadFile {
 
         writeDocumentsToDisk();
         System.out.println("stoping indexer");
-        PIBuffer.add(new Pair<>(null, -1));
+        PIBuffer.add(new Pair<>(null, new Document(-1)));
         //write remaining posting lists to disk
         mutex.lock();
         try {
@@ -95,6 +105,7 @@ public class ReadFile {
             e.printStackTrace();
         }
         deletePrevFiles();
+        Document.setAvgDocLength(documentsSumLenght/numOfDocs);
         return numOfDocs;
     }
 
@@ -171,17 +182,23 @@ public class ReadFile {
         int startLineNumInt = 0;
         int endLineNumInt = 0;
         int numOfLinesInt = 0;
-        int s = 0;
+        String docNO=null;
         for (String line : fileList) {
             docLines.add(line);
+            if(line.contains("<DOCNO>"))
+                docNO=line.substring(8,line.length()-9);
             endLineNumInt++;
             numOfLinesInt++;
             if (line.equals("</DOC>")) {
-                createDoc(filePath, startLineNumInt, numOfLinesInt);
                 Collection<ATerm> terms = parse.parseDocument(docLines);
-
+                int docLength=parse.getLastParsedDocumentLength();
+                documentsSumLenght+=docLength;
+                createDoc(filePath, startLineNumInt, numOfLinesInt);
                 //add the parse terms to the producer-consumer buffer.
-                PIBuffer.add(new Pair(terms.iterator(), numOfDocs));
+                Document document=new Document(numOfDocs);
+                document.setDocLength(docLength);
+                document.setDOCNO(docNO);
+                PIBuffer.add(new Pair(terms.iterator(), document));
 
                 startLineNumInt = endLineNumInt + 1;
                 numOfLinesInt = 0;
@@ -201,8 +218,8 @@ public class ReadFile {
         Thread createIndex = new Thread(() -> {
             mutex.lock();
             while (true) {
-                Pair<Iterator<ATerm>, Integer> toIndex = PIBuffer.get();
-                if (toIndex.getValue() == -1) {
+                Pair<Iterator<ATerm>, Document> toIndex = PIBuffer.get();
+                if (toIndex.getValue().getDocID() == -1) {
                     break;
                 }
                 indexer.createInvertedIndex(toIndex.getKey(), toIndex.getValue());
@@ -330,4 +347,31 @@ public class ReadFile {
         return parse.getAllDocumentLanguages();
     }
 
+    public void runQueryFromUser(String query,boolean spellCheck, int numOfSynonyms){
+        List<String> queryLine=new ArrayList<>();
+        queryLine.add("<title> "+query);
+        int queryID= (int) (Math.random()*100);
+        runQuery(queryLine,spellCheck,numOfSynonyms,queryID);
+    }
+
+    public void runQueriesFromFile(String queriesFilePath,boolean spellCheck, int numOfSynonyms){
+        List<List<String>> queries=new ArrayList<>();
+        List<String>queryLines=new ArrayList<>();
+        List<String>fileContent=readContent(Paths.get(queriesFilePath));
+        int queryID=-1;
+        for (String line : fileContent) {
+            queryLines.add(line);
+            if(line.contains("<num>"))
+                queryID= Integer.parseInt(line.substring(line.indexOf(";")+2));
+            if (line.equals("</top>")) {
+                runQuery(queryLines,spellCheck,numOfSynonyms,queryID);
+            }
+        }
+    }
+
+    private void runQuery(List<String> query,boolean spellCheck, int numOfSynonyms, int queryID){
+        List<ATerm> queryTerms= (List<ATerm>) parse.parseQuery(query,spellCheck,numOfSynonyms);//fixme:remove casting.
+        List<Document>releventDocuments=ranker.rankDocuments(queryTerms);
+        //save results to resFile.fixme:need to add result
+    }
 }
