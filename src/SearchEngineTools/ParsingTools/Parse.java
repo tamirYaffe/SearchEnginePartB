@@ -210,7 +210,7 @@ public class Parse {
     /////////////////////////////////////////////
 
 
-    public Collection<ATerm> parseQuery(List<String> query, boolean spellCheck, int maxSynonyms){
+    public List<ATerm> parseQuery(List<String> query, boolean spellCheck, int maxSynonyms){
         QueryTokenList queryTokenList = new QueryTokenList();
         queryTokenList.initialize(query,currencySymbols,delimitersToSplitWordBy,stopWords);
         return parse(queryTokenList,new HashMap<>(),spellCheck,maxSynonyms);
@@ -236,12 +236,15 @@ public class Parse {
         //get final collection of terms
         Collection<ATerm> toReturn = getFinalTermCollection(occurrencesAndPositionsOfTerms);
         //clear tokenlist
-        tokenList.clear();
+        clear();
         //return terms
         return toReturn;
 
     }
 
+    protected void clear(){
+        tokenList.clear();
+    }
     private void getDocCity(CityTerm documentCityTerm,Map<String, ATerm> occurrencesAndPositionsOfTerms){
         if(documentCityTerm==null)
             return;
@@ -309,9 +312,9 @@ public class Parse {
      * @param occurrencesAndPositionsOfTerms
      * @return
      */
-    protected Collection<ATerm> parse(ITokenList tokenList, Map<String, ATerm> occurrencesAndPositionsOfTerms,boolean spellCheck,int maxSynonyms){
+    protected List<ATerm> parse(ITokenList tokenList, Map<String, ATerm> occurrencesAndPositionsOfTerms,boolean spellCheck,int maxSynonyms){
         addAllTermsToOccurrancesOfTerms(occurrencesAndPositionsOfTerms,tokenList,spellCheck,maxSynonyms);
-        Collection<ATerm> toReturn = getFinalTermCollection(occurrencesAndPositionsOfTerms);
+        List<ATerm> toReturn = getFinalTermCollection(occurrencesAndPositionsOfTerms);
         return toReturn;
     }
 
@@ -321,7 +324,7 @@ public class Parse {
      * @param occurrencesOfTerms
      * @return
      */
-    protected Collection<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
+    protected List<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
         ArrayList<ATerm> toReturn = new ArrayList<>(occurrencesOfTerms.size());
         lastParsedDocumentLength = 0;
         for (String termString:occurrencesOfTerms.keySet()) {
