@@ -1,11 +1,10 @@
 package SearchEngineTools;
 
-
-import javafx.util.Pair;
-
 import SearchEngineTools.ParsingTools.Term.ATerm;
 import SearchEngineTools.ParsingTools.Term.CityTerm;
 import SearchEngineTools.ParsingTools.Term.WordTerm;
+import javafx.util.Pair;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,8 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Indexer {
     //dictionary that holds term->df. used also for word check for big first word.
     private Map<String, Pair<Integer, Integer>> dictionary;
-
-    private Map<String,Integer> entities;
 
     //dictionary and posting list in one hash.
     private Map<String, PostingList> tempInvertedIndex;
@@ -50,7 +47,6 @@ public class Indexer {
      */
     public Indexer() {
         dictionary = new LinkedHashMap<>();
-        entities = new LinkedHashMap<>();
         tempInvertedIndex = new HashMap<>();
         cityInvertedIndex = new LinkedHashMap<>();
     }
@@ -71,9 +67,10 @@ public class Indexer {
      * Creates the dictionary and posting files.
      *
      * @param terms - list of the document terms(after parse).
-     * @param document - the document object of the terms list.
+     * @param docID - the docId of the terms list.
      */
-    public void createInvertedIndex(Iterator<ATerm> terms, Document document) {
+    public void createInvertedIndex(Iterator<ATerm> terms, int docID) {
+        Document document = new Document(docID);
         while (terms.hasNext()) {
             ATerm aTerm = terms.next();
             if (aTerm.getTerm().equals("."))
@@ -83,7 +80,7 @@ public class Indexer {
             String term = aTerm.getTerm();
             if (aTerm instanceof CityTerm) {
                 document.setDocCity(term);
-                addToCityIndex(aTerm, document.getDocID());
+                addToCityIndex(aTerm, docID);
                 if(aTerm.getOccurrences()==0)
                     continue;
             }
@@ -98,7 +95,7 @@ public class Indexer {
 
             //add or update temp inverted index.
             PostingList postingsList;
-            PostingEntry postingEntry = new PostingEntry(document.getDocID(), termOccurrences);
+            PostingEntry postingEntry = new PostingEntry(docID, termOccurrences);
             if (!tempInvertedIndex.containsKey(term)) {
                 postingsList = new PostingList();
                 tempInvertedIndex.put(term, postingsList);
@@ -190,7 +187,6 @@ public class Indexer {
         }
         bw.close();
         sortAndWriteDictionaryToDisk();
-        sortAndWriteEntitiesToDisk();
         resetIndex();
     }
 
@@ -262,7 +258,6 @@ public class Indexer {
         dictionary.clear();
         tempInvertedIndex.clear();
         cityInvertedIndex.clear();
-        entities.clear();
     }
 
     //<editor-fold desc="Private functions">
@@ -382,7 +377,6 @@ public class Indexer {
      * @param aTerm- word to check.
      */
     private void handleCapitalWord(ATerm aTerm) {
-        addToEntities(aTerm);
         String term = aTerm.getTerm();
         String termLowerCase = term.toLowerCase();
         String termUpperCase = term.toUpperCase();
@@ -486,42 +480,4 @@ public class Indexer {
         return dictionary.size();
     }
     //</editor-fold>
-
-    private void addToEntities(ATerm term) {
-        if(term instanceof WordTerm) {
-            String termString = term.getTerm();
-            if(Character.isUpperCase(termString.charAt(0))) {
-                if(entities.containsKey(termString)) {
-                    entities.replace(termString,entities.get(termString)+1);
-                }
-                else {
-                    entities.put(termString,1);
-                }
-            }
-        }
-    }
-
-    private void sortAndWriteEntitiesToDisk() {
-        String fileName;
-        if(useStemming)
-            fileName="EntitiesStemming.txt";
-        else
-            fileName="Entities.txt";
-        String pathName = postingFilesPath + fileSeparator + fileName;
-        File file = new File(pathName);
-        try (FileWriter fw = new FileWriter(file);
-             BufferedWriter bw = new BufferedWriter(fw)) {
-
-            List<String> keys = new ArrayList<>(entities.keySet());
-            Collections.sort(keys);
-            for (String key : keys) {
-                int idf = entities.get(key);
-                bw.write(key + ":" + idf);
-                bw.newLine();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
