@@ -17,6 +17,8 @@ public class Indexer {
     //dictionary that holds term->df. used also for word check for big first word.
     private Map<String, Pair<Integer, Integer>> dictionary;
 
+    private Map<String,Integer> entities;
+
     //dictionary and posting list in one hash.
     private Map<String, PostingList> tempInvertedIndex;
 
@@ -48,6 +50,7 @@ public class Indexer {
      */
     public Indexer() {
         dictionary = new LinkedHashMap<>();
+        entities = new LinkedHashMap<>();
         tempInvertedIndex = new HashMap<>();
         cityInvertedIndex = new LinkedHashMap<>();
     }
@@ -187,6 +190,7 @@ public class Indexer {
         }
         bw.close();
         sortAndWriteDictionaryToDisk();
+        sortAndWriteEntitiesToDisk();
         resetIndex();
     }
 
@@ -258,6 +262,7 @@ public class Indexer {
         dictionary.clear();
         tempInvertedIndex.clear();
         cityInvertedIndex.clear();
+        entities.clear();
     }
 
     //<editor-fold desc="Private functions">
@@ -377,6 +382,7 @@ public class Indexer {
      * @param aTerm- word to check.
      */
     private void handleCapitalWord(ATerm aTerm) {
+        addToEntities(aTerm);
         String term = aTerm.getTerm();
         String termLowerCase = term.toLowerCase();
         String termUpperCase = term.toUpperCase();
@@ -480,4 +486,42 @@ public class Indexer {
         return dictionary.size();
     }
     //</editor-fold>
+
+    private void addToEntities(ATerm term) {
+        if(term instanceof WordTerm) {
+            String termString = term.getTerm();
+            if(Character.isUpperCase(termString.charAt(0))) {
+                if(entities.containsKey(termString)) {
+                    entities.replace(termString,entities.get(termString)+1);
+                }
+                else {
+                    entities.put(termString,1);
+                }
+            }
+        }
+    }
+
+    private void sortAndWriteEntitiesToDisk() {
+        String fileName;
+        if(useStemming)
+            fileName="EntitiesStemming.txt";
+        else
+            fileName="Entities.txt";
+        String pathName = postingFilesPath + fileSeparator + fileName;
+        File file = new File(pathName);
+        try (FileWriter fw = new FileWriter(file);
+             BufferedWriter bw = new BufferedWriter(fw)) {
+
+            List<String> keys = new ArrayList<>(entities.keySet());
+            Collections.sort(keys);
+            for (String key : keys) {
+                int idf = entities.get(key);
+                bw.write(key + ":" + idf);
+                bw.newLine();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

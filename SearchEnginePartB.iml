@@ -8,5 +8,9 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="restcountries" level="project" />
+    <orderEntry type="library" name="quick-json-1.0.2.3" level="project" />
+    <orderEntry type="library" name="jackson-annotations-2.9.4" level="project" />
+    <orderEntry type="library" name="jackson-core-2.9.4" level="project" />
+    <orderEntry type="library" name="jackson-databind-2.9.4" level="project" />
   </component>
 </module>
