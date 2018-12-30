@@ -15,7 +15,7 @@ public class EntityParse extends Parse {
     private PriorityQueue<ATerm> maxQueue = new PriorityQueue<>(new Comparator<ATerm>() {
         @Override
         public int compare(ATerm o1, ATerm o2) {
-            return -Integer.compare(o1.getOccurrences(),o2.getOccurrences());
+            return Integer.compare(o2.getOccurrences(),o1.getOccurrences());
         }
     });
     private PriorityQueue<ATerm> minQueue = new PriorityQueue<>(new Comparator<ATerm>() {
