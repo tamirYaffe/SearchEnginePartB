@@ -189,11 +189,8 @@ public class Document{
     }
 
     public static double getAvgDocLength() {
-        if(avgDocLength==0)
-            avgDocLength=readAvgDocLengthFromDisk();
         return avgDocLength;
     }
-
     public int getDocLength() {
         return docLength;
     }
@@ -214,10 +211,7 @@ public class Document{
 
     public static void setAvgDocLength(double avgDocLength) {
         Document.avgDocLength = avgDocLength;
-        writeAvgDocLengthToDisk(avgDocLength);
     }
-
-
 
     public static void setUseStemming(boolean useStemming) {
         Document.useStemming = useStemming;
@@ -226,11 +220,5 @@ public class Document{
     public void setDocLength(int docLength) {
         this.docLength = docLength;
     }
-    //</editor-fold>
-    private static void writeAvgDocLengthToDisk(double avgDocLength) {
-    }
-
-    private static double readAvgDocLengthFromDisk() {
-        return 0;
-    }
+//</editor-fold>
 }
