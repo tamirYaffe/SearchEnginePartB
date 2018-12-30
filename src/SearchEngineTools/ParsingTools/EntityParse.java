@@ -36,7 +36,7 @@ public class EntityParse extends Parse {
             super.addTermToOccurrencesList(term,occurrencesList);
     }
     @Override
-    protected Collection<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
+    protected List<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
         ArrayList<ATerm> toReturn = new ArrayList<>(occurrencesOfTerms.size());
         clearQueues();
         for (String termString:occurrencesOfTerms.keySet()) {

@@ -26,7 +26,7 @@ public class ParseWithStemming extends Parse {
      * @param occurrencesOfTerms
      * @return
      */
-    protected Collection<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
+    protected List<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
         ArrayList<ATerm> toReturn = new ArrayList<>(occurrencesOfTerms.size());
         HashMap<String, WordTerm> toStem= new HashMap<String, WordTerm>();
         for (String termString:occurrencesOfTerms.keySet()) {
