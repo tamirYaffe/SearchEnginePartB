@@ -107,9 +107,12 @@ public abstract class ATerm  implements Comparable<ATerm>{
         if(other.positions==null)
             return;
         else {
-            if(positions==null)
-                positions=new ArrayList<>(other.positions.size());
-            positions.addAll(other.positions);
+            int currentPositionSize = positions==null ? 0 : positions.size();
+            ArrayList<Integer> newPositions = new ArrayList<>(other.positions.size()+currentPositionSize);
+            if(positions!=null)
+                newPositions.addAll(positions);
+            newPositions.addAll(other.positions);
+            positions = newPositions;
         }
     }
 
