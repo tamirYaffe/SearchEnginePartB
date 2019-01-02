@@ -4,8 +4,9 @@ package SearchEngineTools.ParsingTools;
 import SearchEngineTools.ParsingTools.Term.*;
 import SearchEngineTools.ParsingTools.TokenList.DocumentTokenList;
 import SearchEngineTools.ParsingTools.TokenList.ITokenList;
+//import SearchEngineTools.ParsingTools.TokenList.QueryTokenList;
+import SearchEngineTools.ParsingTools.TokenList.QueryTokenList;
 import SearchEngineTools.ParsingTools.TokenList.TextTokenList;
-import SearchEngineTools.datamuse.DatamuseQuery;
 import javafx.util.Pair;
 import sun.awt.Mutex;
 import SearchEngineTools.ParsingTools.Term.Value;
@@ -27,11 +28,11 @@ public class Parse {
 
     //months and their values
     //for example <december, 12>
-    protected Map<String, Integer> months;
+    private Map<String, Integer> months;
 
     //months and last day
     //i.g <1,31>, <2,29>
-    protected Map<Integer, Integer> lastDayInMonth;
+    private Map<Integer, Integer> lastDayInMonth;
 
 
     //all the words that represent percentages
@@ -66,7 +67,6 @@ public class Parse {
 
     private DocumentTokenList tokenList;
 
-    private DatamuseQuery datamuseQuery= new DatamuseQuery();
 
     /**
      * Initializes parser
@@ -98,7 +98,7 @@ public class Parse {
      * @returnall strings that represent a currency
      * for example: US Dollar, Dollar, etc...
      */
-    protected Collection<String> getCurrencyStrings(){
+    private Collection<String> getCurrencyStrings(){
         return  currencyTypes.keySet();
     }
 
@@ -110,7 +110,7 @@ public class Parse {
         return currencySymbols;
     }
 
-    protected Collection<String> getMonthWords(){
+    private Collection<String> getMonthWords(){
         return months.keySet();
     }
 
@@ -209,11 +209,6 @@ public class Parse {
     /////////////////////////////////////////////
 
 
-    public List<ATerm> parseQuery(List<String> query, boolean spellCheck, int maxSynonyms){
-        TextTokenList queryTokenList = new TextTokenList();
-        queryTokenList.initialize(query,currencySymbols,delimitersToSplitWordBy,stopWords);
-        return parse(queryTokenList,new HashMap<>(),spellCheck,maxSynonyms);
-    }
     /**
      * Parse document with tags
      * @param document lines of document
@@ -226,7 +221,7 @@ public class Parse {
         tokenList.initialize(document,currencySymbols,delimitersToSplitWordBy,uniqueStopWords);
         Map<String, ATerm> occurrencesAndPositionsOfTerms = new HashMap<>();
         //get all terms in document and their occurrences
-        addAllTermsToOccurrancesOfTerms(occurrencesAndPositionsOfTerms,tokenList,false,0);
+        addAllTermsToOccurrancesOfTerms(occurrencesAndPositionsOfTerms,tokenList);
         //get document language and city
         String documentLanguage = tokenList.getDocLanguage();
         addDocumentLanguage(documentLanguage);
@@ -235,15 +230,26 @@ public class Parse {
         //get final collection of terms
         Collection<ATerm> toReturn = getFinalTermCollection(occurrencesAndPositionsOfTerms);
         //clear tokenlist
-        clear();
+        tokenList.clear();
         //return terms
         return toReturn;
-
     }
 
-    protected void clear(){
-        tokenList.clear();
+    public Collection<ATerm> parseQuery(List<String> queryLines, boolean spellCheck, int maxSynonyms){
+        QueryTokenList queryTokenList = new QueryTokenList();
+        queryTokenList.initialize(queryLines,currencySymbols,delimitersToSplitWordBy,stopWords,spellCheck,maxSynonyms);
+        Map<String, ATerm> occurrencesAndPositionsOfTerms = new HashMap<>();
+        //get all terms in document and their occurrences
+        addAllTermsToOccurrancesOfTerms(occurrencesAndPositionsOfTerms,queryTokenList);
+        List<Token> wordsToAdd = queryTokenList.getRelatedWords();
+        for (Token token:wordsToAdd) {
+            WordTerm wordTerm = createWordTerm(token);
+            addTermToOccurrencesList(wordTerm,occurrencesAndPositionsOfTerms);
+        }
+        return getFinalTermCollection(occurrencesAndPositionsOfTerms);
     }
+
+
     private void getDocCity(CityTerm documentCityTerm,Map<String, ATerm> occurrencesAndPositionsOfTerms){
         if(documentCityTerm==null)
             return;
@@ -302,7 +308,7 @@ public class Parse {
     public Collection<ATerm> parse(ITokenList tokenList){
         //Map<ATerm,OccurrencesListPair> occurrencesOfTerms = new HashMap<>();
         Map<String, ATerm> occurrencesAndPositionsOfTerms = new HashMap<>();
-        return parse(tokenList,occurrencesAndPositionsOfTerms,false,0);
+        return parse(tokenList,occurrencesAndPositionsOfTerms);
     }
 
     /**
@@ -311,9 +317,9 @@ public class Parse {
      * @param occurrencesAndPositionsOfTerms
      * @return
      */
-    protected List<ATerm> parse(ITokenList tokenList, Map<String, ATerm> occurrencesAndPositionsOfTerms,boolean spellCheck,int maxSynonyms){
-        addAllTermsToOccurrancesOfTerms(occurrencesAndPositionsOfTerms,tokenList,spellCheck,maxSynonyms);
-        List<ATerm> toReturn = getFinalTermCollection(occurrencesAndPositionsOfTerms);
+    protected Collection<ATerm> parse(ITokenList tokenList, Map<String, ATerm> occurrencesAndPositionsOfTerms){
+        addAllTermsToOccurrancesOfTerms(occurrencesAndPositionsOfTerms,tokenList);
+        Collection<ATerm> toReturn = getFinalTermCollection(occurrencesAndPositionsOfTerms);
         return toReturn;
     }
 
@@ -323,7 +329,7 @@ public class Parse {
      * @param occurrencesOfTerms
      * @return
      */
-    protected List<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
+    protected Collection<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
         ArrayList<ATerm> toReturn = new ArrayList<>(occurrencesOfTerms.size());
         lastParsedDocumentLength = 0;
         for (String termString:occurrencesOfTerms.keySet()) {
@@ -340,9 +346,9 @@ public class Parse {
      * @param occurrencesOfTerms
      * @param tokenList
      */
-    private void addAllTermsToOccurrancesOfTerms(Map<String, ATerm> occurrencesOfTerms, ITokenList tokenList, boolean spellcheck, int maxSynonyms) {
+    private void addAllTermsToOccurrancesOfTerms(Map<String, ATerm> occurrencesOfTerms, ITokenList tokenList) {
         while (!tokenList.isEmpty()){
-            getNextTerm(occurrencesOfTerms,tokenList,spellcheck,maxSynonyms);
+            getNextTerm(occurrencesOfTerms,tokenList);
         }
     }
 
@@ -351,7 +357,7 @@ public class Parse {
      * @param occurrencesOfTerms
      * @param tokenList
      */
-    private void getNextTerm(Map<String, ATerm> occurrencesOfTerms, ITokenList tokenList,boolean spellCheck, int maxSynonyms){
+    private void getNextTerm(Map<String, ATerm> occurrencesOfTerms, ITokenList tokenList){
         ATerm nextTerm = null;
         //if list is empty, no tokens
         if(tokenList.isEmpty())
@@ -367,7 +373,7 @@ public class Parse {
         }
         //word
         else {
-            addWordTerm(tokenList, token,occurrencesOfTerms,spellCheck,maxSynonyms);
+            addWordTerm(tokenList, token,occurrencesOfTerms);
         }
     }
 
@@ -376,7 +382,7 @@ public class Parse {
      * @param s
      * @return true if s is a number, false otherwise
      */
-    protected boolean isNumber(String s){
+    private boolean isNumber(String s){
         float [] floats = getNumberValue(s);
         return floats != null;
     }
@@ -414,7 +420,7 @@ public class Parse {
      * @param nextTerm
      * @param occurrencesOfTerms
      */
-    protected void AddNextNumberTerm(ITokenList tokenList, ATerm nextTerm, Map<String, ATerm> occurrencesOfTerms){
+    private void AddNextNumberTerm(ITokenList tokenList, ATerm nextTerm, Map<String, ATerm> occurrencesOfTerms){
         //get next word
         if(!tokenList.isEmpty()) {
             Token nextToken = tokenList.peek();
@@ -472,7 +478,7 @@ public class Parse {
      * @param s
      * @return true if s is a fraction, false otherwise
      */
-    protected boolean isFraction(String s){
+    private boolean isFraction(String s){
         String[] split = null;
         if(s.contains("/")) {
             split = s.split("/");
@@ -490,7 +496,7 @@ public class Parse {
      * @param s
      * @return true if s is an integer, false otherwise
      */
-    protected boolean isInteger(CharSequence s){
+    private boolean isInteger(CharSequence s){
         String string;
         if(s instanceof String)
             string = (String)s;
@@ -556,7 +562,7 @@ public class Parse {
      * @param s valid fraction
      * @return fraction term that corresponds to string s
      */
-    protected FractionTerm getFractionTerm(String s){
+    private FractionTerm getFractionTerm(String s){
         String[] split = s.split("/");
         NumberTerm numerator = new NumberTerm(split[0]);
         NumberTerm denominator = new NumberTerm(split[1]);
@@ -643,7 +649,7 @@ public class Parse {
      * @param token
      * @param occurrencesOfTerms
      */
-    protected void addWordTerm(ITokenList tokens, Token token, Map<String, ATerm> occurrencesOfTerms, boolean spellCheck, int maxSynonyms){
+    private void addWordTerm(ITokenList tokens, Token token, Map<String, ATerm> occurrencesOfTerms){
         ATerm nextTerm = null;
         String tokenString = token.getTokenString();
         //check percentage
@@ -681,7 +687,7 @@ public class Parse {
         }
         //check hyphenated word
         else if(isHyphenatedWord(tokenString)){
-            List<ATerm> toAdd = getHyphenatedTokens(token,tokens,spellCheck,maxSynonyms);
+            List<ATerm> toAdd = getHyphenatedTokens(token,tokens);
             for (ATerm termToAdd:toAdd) {
                 addTermToOccurrencesList(termToAdd,occurrencesOfTerms);
             }
@@ -731,7 +737,7 @@ public class Parse {
             return;*/
 
         //split word by non numbers and letter
-        List<ATerm> toAdd = getFinalWordTermList(token,tokens,spellCheck,maxSynonyms);
+        List<ATerm> toAdd = getFinalWordTermList(token,tokens);
         for (ATerm termToAdd:toAdd) {
             addTermToOccurrencesList(termToAdd,occurrencesOfTerms);
         }
@@ -760,7 +766,7 @@ public class Parse {
      * @param s
      * @return
      */
-    protected boolean isPercentage(String s) {
+    private boolean isPercentage(String s) {
         if(s.length()>1 && s.charAt(s.length()-1)=='%'){
             String number = s.substring(0,s.length()-1);
             if(number!=null && number.length()>0 && isNumber(number))
@@ -774,7 +780,7 @@ public class Parse {
      * @param s
      * @return true if string is currency, false otherwise
      */
-    protected boolean isCurrency(String s){
+    private boolean isCurrency(String s){
         if(s.length()>1){
             char first = s.charAt(0);
             if(getCurrencySymbols().contains(first) && (isNumber(s.substring(1)) || isNumberWithValue(s.substring(1))))
@@ -789,8 +795,8 @@ public class Parse {
      * @param tokens
      * @return
      */
-    protected List<ATerm> getFinalWordTermList(Token s, ITokenList tokens, boolean spellCheck, int maxSynonyms){
-        return getFinalWordTermList(s,tokens,new ArrayList<>(0),spellCheck,maxSynonyms);
+    private List<ATerm> getFinalWordTermList(Token s, ITokenList tokens){
+        return getFinalWordTermList(s,tokens,new ArrayList<>(0));
     }
 
     /**
@@ -800,7 +806,7 @@ public class Parse {
      * @param delimitersToIgnore
      * @return
      */
-    protected List<ATerm> getFinalWordTermList(Token token, ITokenList tokens, Collection<Character> delimitersToIgnore, boolean spellCheck, int maxSynonyms) {
+    protected List<ATerm> getFinalWordTermList(Token token, ITokenList tokens, Collection<Character> delimitersToIgnore) {
         List<ATerm> toReturn = new ArrayList<>();
         String s = token.getTokenString();
         int position = token.getPosition();
@@ -834,10 +840,6 @@ public class Parse {
             return toReturn;
         else if(desiredSubstrings.size()==1){
             token.setTokenString(s.substring(desiredSubstrings.get(0).getKey(),desiredSubstrings.get(0).getValue()));
-            if(spellCheck)
-                spellCheck(token,toReturn,maxSynonyms);
-            if(maxSynonyms>0)
-                addSynonyms(token,maxSynonyms,toReturn);
             WordTerm term = createWordTerm(token);
             if(term!=null)
                 toReturn.add(term);
@@ -854,31 +856,6 @@ public class Parse {
         //prepend desired tokens to list
         tokens.prepend(tokensToAdd);
         return toReturn;
-    }
-
-    private void addSynonyms(Token token, int maxSynonyms, List<ATerm> addTo) {
-        String tokenString = token.getTokenString();
-        List<String> synonyms = Character.isUpperCase(tokenString.charAt(0))?null:datamuseQuery.synonyms(tokenString,maxSynonyms);
-        for(int i=0; synonyms!=null && i<synonyms.size(); i++){
-            WordTerm synonym = createWordTerm(new Token(synonyms.get(i),-1));
-            addTo.add(synonym);
-        }
-    }
-
-    private void spellCheck(Token token,List<ATerm> addTo,int maxSynonyms) {
-        boolean addSynonyms = maxSynonyms>0;
-        String tokenString = token.getTokenString();
-        List<String> correctSpellingAsList = datamuseQuery.spelledSimilar(tokenString,1);
-        String correctSpelling = correctSpellingAsList.isEmpty()?null:correctSpellingAsList.get(0);
-        if(correctSpelling!=null && !tokenString.toLowerCase().equals(correctSpelling)){
-            correctSpelling = Character.isUpperCase(tokenString.charAt(0)) ? correctSpelling.toUpperCase() : correctSpelling;
-            WordTerm correctlySpelledTerm = createWordTerm(new Token(correctSpelling,token.getPosition()));
-            if(correctlySpelledTerm!=null){
-                addTo.add(correctlySpelledTerm);
-                if(addSynonyms)
-                    addSynonyms(new Token(correctSpelling,token.getPosition()),maxSynonyms,addTo);
-            }
-        }
     }
 
     protected WordTerm createWordTerm(Token token) {
@@ -944,7 +921,7 @@ public class Parse {
         return isStopWord;
     }
 
-    protected boolean isHyphenatedWord(String token) {
+    private boolean isHyphenatedWord(String token) {
         for (char delimiter:delimitersToSplitWordBy) {
             if(token.contains(""+delimiter)){
                 String[] split = token.split(""+delimiter);
@@ -971,16 +948,15 @@ public class Parse {
         }
         return null;
     }
-
-    protected List<ATerm> getHyphenatedTokens(Token token, ITokenList tokens, boolean spellCheck, int maxSynonyms) {
-        List<ATerm> hyphenatedToken = getFinalWordTermList(token,tokens,delimitersToSplitWordBy,spellCheck,maxSynonyms);
+    protected List<ATerm> getHyphenatedTokens(Token token, ITokenList tokens) {
+        List<ATerm> hyphenatedToken = getFinalWordTermList(token,tokens,delimitersToSplitWordBy);
         if(!(hyphenatedToken==null || hyphenatedToken.isEmpty())){
-            hyphenatedToken.addAll(getFinalWordTermList(token,tokens,spellCheck,maxSynonyms));
+            hyphenatedToken.addAll(getFinalWordTermList(token,tokens));
         }
         return hyphenatedToken;
     }
 
-    protected boolean isNumberWithValue(String s){
+    private boolean isNumberWithValue(String s){
         //get last index of number
         boolean number = true;
         int pointer = 0;
@@ -1000,7 +976,7 @@ public class Parse {
         return false;
     }
 
-    protected NumberTerm splitWord(String s){
+    private NumberTerm splitWord(String s){
         boolean number = true;
         int pointer = 0;
         while (pointer<s.length() && number){
