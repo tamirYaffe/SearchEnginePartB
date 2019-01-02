@@ -20,24 +20,17 @@ public class DocumentTokenList extends TextTokenList {
     private String docLanguage = null;
 
 
-    /**
-     * InitializeDocumentTokenList
-     * @param documentLines
-     * @param currencySymbols
-     * @param delimitersToSplitWordBy
-     * @param stopWords
-     */
-    public void initialize(List<String> documentLines, Collection<Character> currencySymbols, Collection<Character> delimitersToSplitWordBy, Collection<String> stopWords) {
-        isText=false;
-        super.initialize(documentLines,currencySymbols,delimitersToSplitWordBy,stopWords);
-    }
 
-        public String getDocLanguage(){
+
+    public String getDocLanguage(){
         return docLanguage;
     }
     /**
      * Constructer for the Document TokenList Class
      */
+    public DocumentTokenList(){
+    }
+
 
 
 
@@ -69,8 +62,6 @@ public class DocumentTokenList extends TextTokenList {
             }
             else
                 return currentLine;
-
-            //find first actual line of text
         }
         else {
             while (!documentLines.isEmpty() && !isText){
@@ -138,8 +129,6 @@ public class DocumentTokenList extends TextTokenList {
         return cityName;
     }
 
-
-
     private void setDocLanguage(String currentLine){
         currentLine = currentLine.substring(19);
         int indexOfTag = currentLine.indexOf(("</F>"));
@@ -158,6 +147,24 @@ public class DocumentTokenList extends TextTokenList {
         docLanguage = currentLine;
     }
 
+    @Override
+    public void clear() {
+        this.isText=false;
+        this.cityTerm=null;
+        super.clear();
+    }
+
+    /**
+     * InitializeDocumentTokenList
+     * @param documentLines
+     * @param currencySymbols
+     * @param delimitersToSplitWordBy
+     * @param stopWords
+     */
+    public void initialize(List<String> documentLines, Collection<Character> currencySymbols, Collection<Character> delimitersToSplitWordBy,Collection<String> stopWords) {
+        isText=false;
+        super.initialize(documentLines,currencySymbols,delimitersToSplitWordBy,stopWords);
+    }
 
 
     public CityTerm getCityTerm() {

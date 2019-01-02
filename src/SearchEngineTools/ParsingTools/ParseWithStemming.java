@@ -23,10 +23,10 @@ public class ParseWithStemming extends Parse {
 
     /**
      * returns final collection from list
-     * @param occurrencesOfTerms
+     * @param
      * @return
      */
-    protected List<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
+    /*protected Collection<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
         ArrayList<ATerm> toReturn = new ArrayList<>(occurrencesOfTerms.size());
         HashMap<String, WordTerm> toStem= new HashMap<String, WordTerm>();
         for (String termString:occurrencesOfTerms.keySet()) {
@@ -106,7 +106,7 @@ public class ParseWithStemming extends Parse {
     }
 
 
-    /*protected WordTerm createWordTerm(Token token) {
+    protected WordTerm createWordTerm(Token token) {
         String tokenString = token.getTokenString();
         boolean isStopWord = isStopWord(tokenString);
         if(isStopWord)
@@ -116,6 +116,8 @@ public class ParseWithStemming extends Parse {
         tokenString = stemmer.stem(tokenString);
         if(isUpperCase)
             token.setTokenString(tokenString.toUpperCase());
+        else
+            token.setTokenString(tokenString);
         return new WordTerm(token);
     }
 
