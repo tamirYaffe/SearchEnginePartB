@@ -235,7 +235,7 @@ public class Parse {
         return toReturn;
     }
 
-    public Collection<ATerm> parseQuery(List<String> queryLines, boolean spellCheck, int maxSynonyms){
+    public List<ATerm> parseQuery(List<String> queryLines, boolean spellCheck, int maxSynonyms){
         QueryTokenList queryTokenList = new QueryTokenList();
         queryTokenList.initialize(queryLines,currencySymbols,delimitersToSplitWordBy,stopWords,spellCheck,maxSynonyms);
         Map<String, ATerm> occurrencesAndPositionsOfTerms = new HashMap<>();
@@ -246,7 +246,9 @@ public class Parse {
             WordTerm wordTerm = createWordTerm(token);
             addTermToOccurrencesList(wordTerm,occurrencesAndPositionsOfTerms);
         }
-        return getFinalTermCollection(occurrencesAndPositionsOfTerms);
+        List toReturn = new ArrayList();
+        toReturn.addAll(getFinalTermCollection(occurrencesAndPositionsOfTerms));
+        return toReturn;
     }
 
 
