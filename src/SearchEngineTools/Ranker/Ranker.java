@@ -55,25 +55,31 @@ public class Ranker {
 
         List<ATerm> queryTerms=new ArrayList<>();
         queryTerms.addAll(queryTitleTerms);
-        //fixme:uncomment below
-        /*
         if(queryDiscriptionTerms!=null)
             queryTerms.addAll(queryDiscriptionTerms);
-        */
+
         Document currDocument=null;
         List<PostingList> postingLists=getQueryPostingLists(queryTerms);
         System.out.println("all posting lists from disk loaded");//fixme:remove
-        PriorityQueue<Pair<PostingEntry,Integer>> documentQueue=new PriorityQueue<>(Comparator.comparingInt(o -> o.getKey().getDocID()));
 
+        //a priority queue that holds posting entry and the termID of queryTerms.
+        PriorityQueue<Pair<PostingEntry,Integer>> documentQueue=new PriorityQueue<>(Comparator.comparingInt(o -> o.getKey().getDocID()));
         for (int i = 0; i <postingLists.size() ; i++) {
             if(postingLists.get(i)!=null){
-                documentQueue.add(new Pair<>(postingLists.get(i).RemoveFirst(),i));
+                PostingEntry postingEntry = postingLists.get(i).RemoveFirst();
+                while(postingEntry!=null){
+                    documentQueue.add(new Pair<>(postingEntry,i));
+                    postingEntry= postingLists.get(i).RemoveFirst();
+                }
             }
         }
+
+        HashMap<Integer,Pair<Integer,String>> documentsInfo=getDocumentsInfo(new PriorityQueue<>(documentQueue));
+
         //for each document
         while(!documentQueue.isEmpty()){
             //get next posting entry and termID
-            Pair<PostingEntry,Integer> docTermPair=getNextDocumentPair(documentQueue,postingLists);
+            Pair<PostingEntry,Integer> docTermPair=documentQueue.poll();
             PostingEntry currPostingEntry=docTermPair.getKey();
             Document nextDocument=new Document(currPostingEntry.getDocID());
             if(!nextDocument.equals(currDocument)){
@@ -82,14 +88,15 @@ public class Ranker {
                     addToRankedDocs(currDocument);
                 }
                 currDocument=nextDocument;
-                currDocument.loadDocInfo();
+                Pair<Integer,String> documentInfo=documentsInfo.get(currDocument.getDocID());
+                currDocument.setDocLength(documentInfo.getKey());
+                currDocument.setDOCNO(documentInfo.getValue());
             }
             //rank document
-            //System.out.println("ranking document: "+currDocument.getDocID());//fixme:remove
             if(queryTitleTerms.contains(docTermPair.getValue()))
                 rankDocument(currDocument,queryTerms.get(docTermPair.getValue()),currPostingEntry.getTermTF(),true);
-            //else fixme:uncomment
-                //rankDocument(currDocument,queryTerms.get(docTermPair.getValue()),currPostingEntry.getTermTF(),false);fixme:uncomment
+            else
+                rankDocument(currDocument,queryTerms.get(docTermPair.getValue()),currPostingEntry.getTermTF(),false);
         }
         //adding last document
         addToRankedDocs(currDocument);
@@ -132,10 +139,10 @@ public class Ranker {
         return new Pair<>(currPostingEntry,postingListIndex);
     }
 
-    private List<PostingList> getQueryPostingLists(Collection<ATerm> querryTerms) {
+    private List<PostingList> getQueryPostingLists(List<ATerm> querryTerms) {
         List<PostingList> postingLists=new ArrayList<>();
-        for(ATerm querryTerm:querryTerms){
-            postingLists.add(getTermPostingList(querryTerm));
+        for (int i = 0; i < querryTerms.size(); i++) {
+            postingLists.add(i,getTermPostingList(querryTerms.get(i)));
         }
         return postingLists;
     }
@@ -183,5 +190,36 @@ public class Ranker {
                 //removing the min rank document from both queues.
                 maxRankedDocs.remove(minRankedDocs.poll());
             }
+    }
+
+    private HashMap<Integer, Pair<Integer, String>> getDocumentsInfo(PriorityQueue<Pair<PostingEntry, Integer>> documentQueue) {
+        HashMap<Integer, Pair<Integer, String>> documentsInfo=new HashMap<>();
+        String fileSeparator=System.getProperty("file.separator");
+        String file_Name;
+        if(useStemming)
+            file_Name="DocumentsInfoStemming.txt";
+        else
+            file_Name="DocumentsInfo.txt";
+        String pathName=postingFilesPath+fileSeparator+file_Name;
+        File file = new File(pathName);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            int currLineNum=0;
+            line=br.readLine();
+            while(!documentQueue.isEmpty()){
+                int currDocID=documentQueue.poll().getKey().getDocID();
+                while(currLineNum<currDocID){
+                    line=br.readLine();
+                    currLineNum++;
+                }
+                int docLength =Math.toIntExact(Long.valueOf(line.split(" ")[2]));
+                String DOCNO=line.split(" ")[3];
+                Pair<Integer,String> currDocumentInfo=new Pair<>(docLength,DOCNO);
+                documentsInfo.put(currDocID,currDocumentInfo);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return documentsInfo;
     }
 }
