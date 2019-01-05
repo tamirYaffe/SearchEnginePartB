@@ -351,12 +351,12 @@ public class ReadFile {
         return parse.getAllDocumentLanguages();
     }
 
-    public void runQueryFromUser(String query,boolean spellCheck, int numOfSynonyms){
+    public List<Document> runQueryFromUser(String query, boolean spellCheck, int numOfSynonyms){
         deleteResultsFile();
         List<String> queryLine=new ArrayList<>();
         queryLine.add(query);
         int queryID= (int) (Math.random()*100);
-        runQuery(queryLine,null,spellCheck,numOfSynonyms,queryID);
+        return runQuery(queryLine,null,spellCheck,numOfSynonyms,queryID);
     }
 
     public void runQueriesFromFile(String queriesFilePath,boolean spellCheck, int numOfSynonyms){
@@ -394,7 +394,7 @@ public class ReadFile {
         }
     }
 
-    private void runQuery(List<String> queryTitle,List<String> queryDiscription,boolean spellCheck, int numOfSynonyms, int queryID){
+    private List<Document> runQuery(List<String> queryTitle, List<String> queryDiscription, boolean spellCheck, int numOfSynonyms, int queryID){
         List<ATerm> queryTitleTerms= parse.parseQuery(queryTitle,spellCheck,numOfSynonyms);
         List<ATerm> queryDiscriptionTerms=null;
         if(queryDiscription!=null)
@@ -404,6 +404,7 @@ public class ReadFile {
         //save results to resFile.
         for(Document document:releventDocuments)
             writeResultToFile(queryID,0,document.getDOCNO(),document.getDocRank(),0,"tmr");
+        return releventDocuments;
     }
 
     private void writeResultToFile(int queryID,int iter,String docNO,double rank,float sim,String run_ID) {
