@@ -28,6 +28,7 @@ public class Document{
     private double docRank;
     private int docLength;
     private static double avgDocLength;
+    private static int numOfDocs;
     private String DOCNO;
 
     /**
@@ -189,8 +190,17 @@ public class Document{
     }
 
     public static double getAvgDocLength() {
+        if(avgDocLength==0)
+            loadDocumentsInfoLength();
         return avgDocLength;
     }
+
+    public static int getNumOfDocs() {
+        if(numOfDocs==0)
+            loadDocumentsInfoLength();
+        return numOfDocs;
+    }
+
     public int getDocLength() {
         return docLength;
     }
@@ -209,9 +219,12 @@ public class Document{
         this.docRank = docRank;
     }
 
-    public static void setAvgDocLength(double avgDocLength) {
+    public static void setDocumentsInfo(double avgDocLength,int numOfDocs) {
         Document.avgDocLength = avgDocLength;
+        Document.numOfDocs=numOfDocs;
+        writeAvgDocumentsInfoToDisk(avgDocLength,numOfDocs);
     }
+
 
     public static void setUseStemming(boolean useStemming) {
         Document.useStemming = useStemming;
@@ -221,4 +234,29 @@ public class Document{
         this.docLength = docLength;
     }
 //</editor-fold>
+
+    private static void writeAvgDocumentsInfoToDisk(double avgDocLength, int numOfDocs) {
+        String fileSeparator=System.getProperty("file.separator");
+        String pathName = postingFilesPath + fileSeparator +"DocumentsAdditionalInfo.txt";
+        File file = new File(pathName);
+        try (FileWriter fw = new FileWriter(file);
+             BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write(""+avgDocLength+","+numOfDocs);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void loadDocumentsInfoLength() {
+        String fileSeparator=System.getProperty("file.separator");
+        String pathName=postingFilesPath+fileSeparator+"DocumentsAdditionalInfo.txt";
+        File file = new File(pathName);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line=br.readLine();
+            avgDocLength =Double.parseDouble(line.split(",")[0]);
+            numOfDocs =Integer.parseInt(line.split(",")[1]);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
