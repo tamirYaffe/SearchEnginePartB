@@ -378,7 +378,7 @@ public class ReadFile {
             if(line.contains("<desc>")){
                 i++;
                 line=fileContent.get(i);
-                while(!line.equals("")){
+                while(!line.contains("<narr>")){
                     queryDescLines.add(line);
                     i++;
                     line=fileContent.get(i);

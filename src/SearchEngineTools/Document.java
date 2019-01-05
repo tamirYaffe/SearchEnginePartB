@@ -91,7 +91,7 @@ public class Document{
     }
 
     /**
-     * Loads the document startLine, numOfLines and path from documents file to class vars.
+     * Loads the document max_tf, numOfUniqeTerms and DOCNO from documents file to class vars.
      */
     public void loadDocInfo() {
         String[] line ;
