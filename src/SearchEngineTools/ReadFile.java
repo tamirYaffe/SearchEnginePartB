@@ -105,7 +105,7 @@ public class ReadFile {
             e.printStackTrace();
         }
         deletePrevFiles();
-        Document.setAvgDocLength(documentsSumLenght/numOfDocs);
+        Document.setDocumentsInfo(documentsSumLenght/numOfDocs,numOfDocs);
         return numOfDocs;
     }
 
@@ -185,8 +185,13 @@ public class ReadFile {
         String docNO=null;
         for (String line : fileList) {
             docLines.add(line);
-            if(line.contains("<DOCNO>"))
-                docNO=line.substring(8,line.length()-9);
+            if(line.contains("<DOCNO>")){
+                docNO=line.substring(7,line.length()-8);
+                if(docNO.charAt(0)==' ')
+                    docNO=docNO.substring(1);
+                if(docNO.charAt(docNO.length()-1)==' ')
+                    docNO=docNO.substring(0,docNO.length()-1);
+            }
             endLineNumInt++;
             numOfLinesInt++;
             if (line.equals("</DOC>")) {
@@ -199,7 +204,6 @@ public class ReadFile {
                 document.setDocLength(docLength);
                 document.setDOCNO(docNO);
                 PIBuffer.add(new Pair(terms.iterator(), document));
-
                 startLineNumInt = endLineNumInt + 1;
                 numOfLinesInt = 0;
                 docLines.clear();
@@ -347,31 +351,77 @@ public class ReadFile {
         return parse.getAllDocumentLanguages();
     }
 
-    public void runQueryFromUser(String query,boolean spellCheck, int numOfSynonyms){
+    public List<Document> runQueryFromUser(String query, boolean spellCheck, int numOfSynonyms){
+        deleteResultsFile();
         List<String> queryLine=new ArrayList<>();
-        queryLine.add("<title> "+query);
+        queryLine.add(query);
         int queryID= (int) (Math.random()*100);
-        runQuery(queryLine,spellCheck,numOfSynonyms,queryID);
+        return runQuery(queryLine,null,spellCheck,numOfSynonyms,queryID);
     }
 
     public void runQueriesFromFile(String queriesFilePath,boolean spellCheck, int numOfSynonyms){
-        List<List<String>> queries=new ArrayList<>();
-        List<String>queryLines=new ArrayList<>();
+        deleteResultsFile();
+        List<String>queryTitleLines=new ArrayList<>();
+        List<String>queryDescLines=new ArrayList<>();
         List<String>fileContent=readContent(Paths.get(queriesFilePath));
         int queryID=-1;
-        for (String line : fileContent) {
-            queryLines.add(line);
-            if(line.contains("<num>"))
-                queryID= Integer.parseInt(line.substring(line.indexOf(";")+2));
+        for (int i=0;i<fileContent.size();i++) {
+            String line=fileContent.get(i);
+            if(line.contains("<num>")){
+                String queryIDString=line.substring(line.indexOf(":")+2);
+                if(queryIDString.charAt(queryIDString.length()-1)==' ')
+                    queryIDString=queryIDString.substring(0,queryIDString.length()-1);
+                queryID= Integer.parseInt(queryIDString);
+            }
+            if(line.contains("<title>"))
+                queryTitleLines .add(line.substring(7));
+            if(line.contains("<desc>")){
+                i++;
+                line=fileContent.get(i);
+                while(!line.equals("")){
+                    queryDescLines.add(line);
+                    i++;
+                    line=fileContent.get(i);
+                }
+            }
             if (line.equals("</top>")) {
-                runQuery(queryLines,spellCheck,numOfSynonyms,queryID);
+                System.out.println("running query: "+queryID);
+                runQuery(queryTitleLines,queryDescLines,spellCheck,numOfSynonyms,queryID);
+                System.out.println("finished query: "+queryID);
+                queryTitleLines.clear();
+                queryDescLines.clear();
             }
         }
     }
 
-    private void runQuery(List<String> query,boolean spellCheck, int numOfSynonyms, int queryID){
-        List<ATerm> queryTerms= (List<ATerm>) parse.parseQuery(query,spellCheck,numOfSynonyms);//fixme:remove casting.
-        List<Document>releventDocuments=ranker.rankDocuments(queryTerms);
-        //save results to resFile.fixme:need to add result
+    private List<Document> runQuery(List<String> queryTitle, List<String> queryDiscription, boolean spellCheck, int numOfSynonyms, int queryID){
+        List<ATerm> queryTitleTerms= parse.parseQuery(queryTitle,spellCheck,numOfSynonyms);
+        List<ATerm> queryDiscriptionTerms=null;
+        if(queryDiscription!=null)
+            queryDiscriptionTerms=parse.parseQuery(queryDiscription,false,0);
+        System.out.println("starting ranking query");//fixme:remove
+        List<Document>releventDocuments=ranker.rankDocuments(queryTitleTerms,queryDiscriptionTerms);
+        //save results to resFile.
+        for(Document document:releventDocuments)
+            writeResultToFile(queryID,0,document.getDOCNO(),document.getDocRank(),0,"tmr");
+        return releventDocuments;
+    }
+
+    private void writeResultToFile(int queryID,int iter,String docNO,double rank,float sim,String run_ID) {
+        String pathName = postingFilesPath + fileSeparator +"results.txt";
+        File file = new File(pathName);
+        try (FileWriter fw = new FileWriter(file, true);
+             BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write(queryID+" "+iter+" "+docNO+" "+rank+" "+sim+" "+run_ID);
+            bw.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteResultsFile() {
+        String pathName = postingFilesPath + fileSeparator +"results.txt";
+        File file = new File(pathName);
+        file.delete();
     }
 }
