@@ -73,7 +73,7 @@ public class Indexer {
     public void createInvertedIndex(Iterator<ATerm> terms, Document document) {
         while (terms.hasNext()) {
             ATerm aTerm = terms.next();
-            if (aTerm.getTerm().equals("."))
+            if (aTerm.getTerm().equals(".") || isSingleLatter(aTerm.getTerm()))
                 continue;
             if (aTerm instanceof WordTerm && Character.isLetter(aTerm.getTerm().charAt(0)))
                 handleCapitalWord(aTerm);
@@ -121,7 +121,6 @@ public class Indexer {
                 usedMemory = 0;
             }
         }
-
         //write current document info to disk.
         document.writeDocInfoToDisk(postingFilesPath);
     }
@@ -167,6 +166,8 @@ public class Indexer {
             curPostingList = getNextPostingList(queue, readers);
             curPostingList = checkForMergeingPostingLines(queue, readers, curPostingList);
             String term = extractTerm(curPostingList);
+            if(term.equals("F"))
+                System.out.println("mergeBlocks replace found F");
             dictionary.replace(term, new Pair<>(dictionary.get(term).getKey(), postingListIndex++));
 
             //write to buffer posting lists
@@ -331,6 +332,8 @@ public class Indexer {
         if (queue.isEmpty())
             return curPostingList;
         String nextPostingList = queue.peek().getKey();
+        if(extractTerm(curPostingList).equals("F"))
+            System.out.println("checkForMergeingPostingLines found F");
         while (extractTerm(curPostingList).equals(extractTerm(nextPostingList))) {
             curPostingList = mergePostingLists(curPostingList, nextPostingList);
             getNextPostingList(queue, readers);
@@ -471,6 +474,7 @@ public class Indexer {
 
     //<editor-fold desc="Getters">
     public Map<String, Pair<Integer, Integer>> getDictionary() {
+
         return dictionary;
     }
 
@@ -480,4 +484,14 @@ public class Indexer {
         return dictionary.size();
     }
     //</editor-fold>
+
+    private boolean isSingleLatter(String s){
+        String[]smallLatters={"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","w","x","y","z"};
+        String[]bigLatters={"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","W","X","Y","Z"};
+        List<String> smallLattersList=new ArrayList<>();
+        smallLattersList.addAll(Arrays.asList(smallLatters));
+        List<String> bigLattersList=new ArrayList<>();
+        bigLattersList.addAll(Arrays.asList(bigLatters));
+        return smallLattersList.contains(s)|| bigLattersList.contains(s);
+    }
 }
