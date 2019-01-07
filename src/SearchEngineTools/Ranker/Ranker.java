@@ -2,6 +2,7 @@ package SearchEngineTools.Ranker;
 
 import SearchEngineTools.Document;
 import SearchEngineTools.ParsingTools.Term.ATerm;
+import SearchEngineTools.ParsingTools.Term.WordTerm;
 import SearchEngineTools.PostingEntry;
 import SearchEngineTools.PostingList;
 import javafx.util.Pair;
@@ -59,7 +60,9 @@ public class Ranker {
             queryTerms.addAll(queryDiscriptionTerms);
 
         Document currDocument=null;
-        List<PostingList> postingLists=getQueryPostingLists(queryTerms);
+        queryTerms=modifyQueryTerms(queryTerms);
+//        List<PostingList> postingLists=getAllQueryPostingLists(queryTerms);
+        List<PostingList> postingLists=getAllQueryPostingLists(queryTerms);
         System.out.println("all posting lists from disk loaded");//fixme:remove
 
         //a priority queue that holds posting entry and the termID of queryTerms.
@@ -116,7 +119,7 @@ public class Ranker {
      * @param termTF
      */
     private void rankDocument(Document document, ATerm term, int termTF, boolean isTitle) {
-        double k=1.6;
+        double k=1.8;
         double b=0.75;
         double df=dictionary.get(term.getTerm()).getKey();
         int numOfDocs=Document.getNumOfDocs();
@@ -125,7 +128,7 @@ public class Ranker {
         double avgDocLength=Document.getAvgDocLength();
         double rank=term.getOccurrences()*(k+1)*termTF/(termTF+k*(1-b+b*(documentLength/avgDocLength)))*idf;
         if(!isTitle)
-            rank=rank*0.2;
+            rank=rank*0.05;
         document.setDocRank(document.getDocRank()+rank);
     }
 
@@ -137,6 +140,16 @@ public class Ranker {
         if(postingEntry!=null)
             documentQueue.add(new Pair<>(postingEntry,postingListIndex));
         return new Pair<>(currPostingEntry,postingListIndex);
+    }
+
+    private List<PostingList> getAllQueryPostingLists(List<ATerm> queryTerms) {
+        List<PostingList> postingLists;
+        PriorityQueue<Pair<Integer,Integer>>postingListsIndex=new PriorityQueue<>(Comparator.comparingInt(Pair::getValue));
+        for (int i = 0; i <queryTerms.size() ; i++) {
+            postingListsIndex.add(new Pair<>(i,dictionary.get(queryTerms.get(i).getTerm()).getValue()));
+        }
+        postingLists=getPostingLists(postingListsIndex,queryTerms.size());
+        return postingLists;
     }
 
     private List<PostingList> getQueryPostingLists(List<ATerm> querryTerms) {
@@ -221,5 +234,52 @@ public class Ranker {
             e.printStackTrace();
         }
         return documentsInfo;
+    }
+
+    private List<PostingList> getPostingLists(PriorityQueue<Pair<Integer, Integer>> postingListsIndex, int size) {
+        PostingList[]postingListsArray=new PostingList[size];
+        String fileSeparator=System.getProperty("file.separator");
+        String file_Name;
+        if(useStemming)
+            file_Name="postingListsStemming.txt";
+        else
+            file_Name="postingLists.txt";
+        String pathName=postingFilesPath+fileSeparator+file_Name;
+        File file = new File(pathName);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            int currLineNum=0;
+            line=br.readLine();
+            while(!postingListsIndex.isEmpty()){
+                Pair<Integer,Integer>pairPolled=postingListsIndex.poll();
+                int termID=pairPolled.getKey();
+                int postingIndex=pairPolled.getValue();
+                while(currLineNum<postingIndex){
+                    line=br.readLine();
+                    currLineNum++;
+                }
+                postingListsArray[termID]=new PostingList(line);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Arrays.asList(postingListsArray);
+    }
+
+    private List<ATerm> modifyQueryTerms(List<ATerm> queryTerms) {
+        List<ATerm>modifyQueryTerms=new ArrayList<>();
+        for (int i = 0; i < queryTerms.size(); i++) {
+            ATerm aTerm=queryTerms.get(i);
+            String term=aTerm.getTerm();
+            if(dictionary.containsKey(term))
+                modifyQueryTerms.add(aTerm);
+            else{
+                if(aTerm instanceof WordTerm && dictionary.containsKey(term.toLowerCase())){
+                    ((WordTerm) aTerm).toLowerCase();
+                    modifyQueryTerms.add(aTerm);
+                }
+            }
+        }
+        return modifyQueryTerms;
     }
 }
