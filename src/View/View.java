@@ -480,12 +480,12 @@ public class View implements Observer{
         model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
         List<Document> rankedDocuments =  model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
         RankedDocumentDisplayer rankedDocumentDisplayer = new RankedDocumentDisplayer(rankedDocuments);
-        ScrollPane scrollPane = new ScrollPane(rankedDocumentDisplayer);
+
         final Stage dialog = new Stage();
         dialog.initModality(Modality.NONE);
         Button close = new Button("Close");
         close.setOnAction(event -> {dialog.close();});
-        rankedDocumentDisplayer.getChildren().add(close);
+        rankedDocumentDisplayer.getItems().add(close);
         Scene dialogScene = new Scene(rankedDocumentDisplayer, 550, 1000);
         dialog.setScene(dialogScene);
         dialog.setTitle("Query Results");

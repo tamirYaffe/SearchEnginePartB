@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class RankedDocumentDisplayer extends VBox {
+public class RankedDocumentDisplayer extends ListView {
 
     private List<Document> toDisplay;
     private List<Button> displayButtons=new ArrayList<>();
@@ -44,7 +44,9 @@ public class RankedDocumentDisplayer extends VBox {
                 onClickDisplayEntities(display);
             });
             hBox.getChildren().addAll(label,entities);
-            this.getChildren().add(hBox);
+            Label empty = new Label();
+//            this.getChildren().add(hBox);
+            this.getItems().addAll(label,entities, empty);
         }
     }
 
