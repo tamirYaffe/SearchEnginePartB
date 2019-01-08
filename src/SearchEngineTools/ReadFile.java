@@ -359,12 +359,12 @@ public class ReadFile {
      * @param numOfSynonyms- number of synonyms words to add to each query term.
      * @return- list of top ranked documents
      */
-    public List<Document> runQueryFromUser(String query, boolean spellCheck, int numOfSynonyms){
+    public List<Document> runQueryFromUser(String query, boolean spellCheck, int numOfSynonyms,String resultFilePath,List<Document> allowedDocuments){
         deleteResultsFile();
         List<String> queryLine=new ArrayList<>();
         queryLine.add(query);
         int queryID= (int) (Math.random()*100);
-        return runQuery(queryLine,null,spellCheck,numOfSynonyms,queryID);
+        return runQuery(queryLine,null,spellCheck,numOfSynonyms,queryID,resultFilePath,allowedDocuments);
     }
 
     /**
@@ -373,7 +373,7 @@ public class ReadFile {
      * @param spellCheck- boolean for using spell check.
      * @param numOfSynonyms- number of synonyms words to add to each query term.
      */
-    public void runQueriesFromFile(String queriesFilePath,boolean spellCheck, int numOfSynonyms){
+    public void runQueriesFromFile(String queriesFilePath,boolean spellCheck, int numOfSynonyms,String resultFilePath,List<Document> allowedDocuments){
         deleteResultsFile();
         List<String>queryTitleLines=new ArrayList<>();
         List<String>queryDescLines=new ArrayList<>();
@@ -400,7 +400,7 @@ public class ReadFile {
             }
             if (line.equals("</top>")) {
                 System.out.println("running query: "+queryID);
-                runQuery(queryTitleLines,queryDescLines,spellCheck,numOfSynonyms,queryID);
+                runQuery(queryTitleLines,queryDescLines,spellCheck,numOfSynonyms,queryID,resultFilePath,allowedDocuments);
                 System.out.println("finished query: "+queryID);
                 queryTitleLines.clear();
                 queryDescLines.clear();
@@ -410,37 +410,40 @@ public class ReadFile {
 
     /**
      * Run input query and returns a list of top ranked documents.
-     * @param queryTitle- the query title.
-     * @param queryDiscription- the query description.
-     * @param spellCheck- boolean for using spell check.
-     * @param numOfSynonyms- number of synonyms words to add to each query term.
-     * @param queryID- the query ID.
+     * @param queryTitle - the query title.
+     * @param queryDiscription - the query description.
+     * @param spellCheck - boolean for using spell check.
+     * @param numOfSynonyms - number of synonyms words to add to each query term.
+     * @param queryID - the query ID.
+     * @param resultFilePath
+     * @param allowedDocuments
      * @return- a list of top ranked documents.
      */
-    private List<Document> runQuery(List<String> queryTitle, List<String> queryDiscription, boolean spellCheck, int numOfSynonyms, int queryID){
+    private List<Document> runQuery(List<String> queryTitle, List<String> queryDiscription, boolean spellCheck, int numOfSynonyms, int queryID, String resultFilePath, List<Document> allowedDocuments){
         List<ATerm> queryTitleTerms= parse.parseQuery(queryTitle,spellCheck,numOfSynonyms);
         List<ATerm> queryDiscriptionTerms=null;
         if(queryDiscription!=null)
             queryDiscriptionTerms=parse.parseQuery(queryDiscription,false,0);
         System.out.println("starting ranking query");//fixme:remove
-        List<Document>releventDocuments=ranker.rankDocuments(queryTitleTerms,queryDiscriptionTerms);
+        List<Document>releventDocuments=ranker.rankDocuments(queryTitleTerms,queryDiscriptionTerms,allowedDocuments);
         //save results to resFile.
         for(Document document:releventDocuments)
-            writeResultToFile(queryID,0,document.getDOCNO(),document.getDocRank(),0,"tmr");
+            writeResultToFile(resultFilePath,queryID,0,document.getDOCNO(),document.getDocRank(),0,"tmr");
         return releventDocuments;
     }
 
     /**
      * Writes query results to a file.
-     * @param queryID- the query ID.
-     * @param iter- param for Treceval.
-     * @param docNO- document name.
-     * @param rank-param for Treceval.
-     * @param sim-param for Treceval.
-     * @param run_ID-param for Treceval.
+     * @param resultFilePath
+     * @param queryID - the query ID.
+     * @param iter - param for Treceval.
+     * @param docNO - document name.
+     * @param rank -param for Treceval.
+     * @param sim -param for Treceval.
+     * @param run_ID -param for Treceval.
      */
-    private void writeResultToFile(int queryID,int iter,String docNO,double rank,float sim,String run_ID) {
-        String pathName = postingFilesPath + fileSeparator +"results.txt";
+    private void writeResultToFile(String resultFilePath, int queryID, int iter, String docNO, double rank, float sim, String run_ID) {
+        String pathName = resultFilePath + fileSeparator +"results.txt";
         File file = new File(pathName);
         try (FileWriter fw = new FileWriter(file, true);
              BufferedWriter bw = new BufferedWriter(fw)) {
