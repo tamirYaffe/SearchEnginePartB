@@ -6,15 +6,21 @@ import SearchEngineTools.ParsingTools.Term.WordTerm;
 import SearchEngineTools.PostingEntry;
 import SearchEngineTools.PostingList;
 import javafx.util.Pair;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.*;
 
+/**
+ * A class that represents rank process.
+ */
 public class Ranker {
+    //List of ranked documents
     private List <Document> rankedDocs;
+
+    //The corpus dictionary loadad by useStemming value.
     private Map<String, Pair<Integer, Integer>> dictionary;
+
     private int numOfDocumentsToReturn=50;
     private  String postingFilesPath;
     private  boolean useStemming;
@@ -23,7 +29,12 @@ public class Ranker {
     private PriorityQueue<Document>maxRankedDocs=new PriorityQueue<>(new MaxRankedDocumentsComparator());
     private PriorityQueue<Document>minRankedDocs=new PriorityQueue<>(new MinRankedDocumentsComparator());
 
-
+    /**
+     * Constructor
+     * @param dictionary- relevant corpus dictionary.
+     * @param postingFilesPath- the posting lists path.
+     * @param useStemming- boolean for using stemming.
+     */
     public Ranker(Map<String, Pair<Integer, Integer>> dictionary, String postingFilesPath, boolean useStemming) {
         this.rankedDocs = new ArrayList<>();
         this.dictionary=dictionary;
@@ -31,33 +42,21 @@ public class Ranker {
         this.useStemming=useStemming;
     }
 
-    public static void main(String[] args) {
-        TreeSet<Document> test=new TreeSet<>(new MaxRankedDocumentsComparator());
-        for (int i = 0; i < 100; i++) {
-            Document document=new Document(i);
-            if(test.size()<50)
-                test.add(document);
-            else
-            if(test.last().getDocID()<document.getDocID()){
-                test.add(document);
-                test.pollLast();
-            }
-
-        }
-        Iterator<Document> iterator=test.iterator();
-        while(iterator.hasNext())
-            System.out.println(iterator.next().getDocID());
-    }
-
-    public List<Document> rankDocuments(List<ATerm> queryTitleTerms, List<ATerm> queryDiscriptionTerms){
+    /**
+     * Rank's the corpus documents by the input queryTitleTerms and queryDescriptionTerms.
+     * @param queryTitleTerms- the query title terms.
+     * @param queryDescriptionTerms- the query description terms.
+     * @return List of top ranked documents, size of numOfDocumentsToReturn.
+     */
+    public List<Document> rankDocuments(List<ATerm> queryTitleTerms, List<ATerm> queryDescriptionTerms){
         rankedDocs.clear();
         maxRankedDocs.clear();
         minRankedDocs.clear();
 
         List<ATerm> queryTerms=new ArrayList<>();
         queryTerms.addAll(queryTitleTerms);
-        if(queryDiscriptionTerms!=null)
-            queryTerms.addAll(queryDiscriptionTerms);
+        if(queryDescriptionTerms!=null)
+            queryTerms.addAll(queryDescriptionTerms);
 
         Document currDocument=null;
         queryTerms=modifyQueryTerms(queryTerms);
@@ -108,6 +107,9 @@ public class Ranker {
         return rankedDocs;
     }
 
+    /**
+     * Add's top ranked documents to rankedDocuments.
+     */
     private void addTopRankedDocumentsToFinalList() {
         while (!maxRankedDocs.isEmpty())
             rankedDocs.add(maxRankedDocs.poll());
@@ -132,16 +134,11 @@ public class Ranker {
         document.setDocRank(document.getDocRank()+rank);
     }
 
-    private Pair<PostingEntry,Integer> getNextDocumentPair(PriorityQueue<Pair<PostingEntry, Integer>> documentQueue, List<PostingList> postingLists) {
-        Pair <PostingEntry, Integer> pooled=documentQueue.poll();
-        PostingEntry currPostingEntry=pooled.getKey();
-        int postingListIndex=pooled.getValue();
-        PostingEntry postingEntry= postingLists.get(postingListIndex).RemoveFirst();
-        if(postingEntry!=null)
-            documentQueue.add(new Pair<>(postingEntry,postingListIndex));
-        return new Pair<>(currPostingEntry,postingListIndex);
-    }
-
+    /**
+     * Get's and Return's all the posting lists from the of the input query terms.
+     * @param queryTerms- the query terms.
+     * @return- List of the posting lists.
+     */
     private List<PostingList> getAllQueryPostingLists(List<ATerm> queryTerms) {
         List<PostingList> postingLists;
         PriorityQueue<Pair<Integer,Integer>>postingListsIndex=new PriorityQueue<>(Comparator.comparingInt(Pair::getValue));
@@ -152,43 +149,10 @@ public class Ranker {
         return postingLists;
     }
 
-    private List<PostingList> getQueryPostingLists(List<ATerm> querryTerms) {
-        List<PostingList> postingLists=new ArrayList<>();
-        for (int i = 0; i < querryTerms.size(); i++) {
-            postingLists.add(i,getTermPostingList(querryTerms.get(i)));
-        }
-        return postingLists;
-    }
-
-    private PostingList getTermPostingList(ATerm querryTerm) {
-        if(dictionary.containsKey(querryTerm.getTerm())){
-            int postingListPointer=dictionary.get(querryTerm.getTerm()).getValue();
-            String postingListS= readPostingList(postingListPointer);
-            return new PostingList(postingListS);
-        }
-        return null;
-    }
-
-    private String readPostingList(int postingListPointer) {
-        String line=null ;
-        String fileSeparator=System.getProperty("file.separator");
-        String file_Name;
-        if(useStemming)
-            file_Name="postingListsStemming.txt";
-        else
-            file_Name="postingLists.txt";
-        String pathName=postingFilesPath+fileSeparator+file_Name;
-        File file = new File(pathName);
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            for (int i = 0; i < postingListPointer; i++)
-                br.readLine();
-            line=br.readLine();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return line;
-    }
-
+    /**
+     * Add's the input document to ranked document priorities queues.
+     * @param document- the document to add.
+     */
     private void addToRankedDocs(Document document){
         if(document==null)
             return;
@@ -205,6 +169,11 @@ public class Ranker {
             }
     }
 
+    /**
+     * Loads documents info to returned hashMap for all documents in input documentQueue in one file read linear pass.
+     * @param documentQueue- documents we wish to get info about.
+     * @return- hashMap with documents info.
+     */
     private HashMap<Integer, Pair<Integer, String>> getDocumentsInfo(PriorityQueue<Pair<PostingEntry, Integer>> documentQueue) {
         HashMap<Integer, Pair<Integer, String>> documentsInfo=new HashMap<>();
         String fileSeparator=System.getProperty("file.separator");
@@ -236,6 +205,12 @@ public class Ranker {
         return documentsInfo;
     }
 
+    /**
+     * Get's and Return's all the posting lists from the of the input postingListsIndex.
+     * @param postingListsIndex- queue of postingList index.
+     * @param size-size of the returned list.
+     * @return
+     */
     private List<PostingList> getPostingLists(PriorityQueue<Pair<Integer, Integer>> postingListsIndex, int size) {
         PostingList[]postingListsArray=new PostingList[size];
         String fileSeparator=System.getProperty("file.separator");
@@ -266,6 +241,11 @@ public class Ranker {
         return Arrays.asList(postingListsArray);
     }
 
+    /**
+     * Check and return modify list of only the terms of queryTerms which appear in the corpus dictionary.
+     * @param queryTerms- list of query terms.
+     * @return-  modify list of only the terms of queryTerms which appear in the corpus dictionary.
+     */
     private List<ATerm> modifyQueryTerms(List<ATerm> queryTerms) {
         List<ATerm>modifyQueryTerms=new ArrayList<>();
         for (int i = 0; i < queryTerms.size(); i++) {
