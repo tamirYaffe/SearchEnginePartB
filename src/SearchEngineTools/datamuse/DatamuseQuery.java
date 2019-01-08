@@ -108,6 +108,16 @@ public class DatamuseQuery {
         return getJSON("http://api.datamuse.com/words?sl=" + s);
     }
 
+    private String soundsSimilarMaxResults(String word, int maxResults){
+        String s = word.replaceAll(" ", "+");
+        return getJSON("http://api.datamuse.com/words?sl=" + s+"&max="+maxResults);
+    }
+
+    public List<String> soundSimilar(String word, int maxResults){
+        String similar = soundsSimilarMaxResults(word,maxResults);
+        return splitCrudeAnswer(similar);
+    }
+
     /**
      * Find words which are spelt the same as the specified word/phrase.
      * @param word A word or phrase.
