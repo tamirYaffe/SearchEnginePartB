@@ -64,6 +64,7 @@ public class View implements Observer{
     public TextField tf_queryFilePath;
     public Button btn_queryResultFilesPath;
     public TextField tf_queryResultFilePath;
+    public Button btn_filteByCities;
     public JTextArea jTextArea;
 
 
@@ -217,6 +218,18 @@ public class View implements Observer{
         //load dictionary to index dictionary
         model.loadDictionary(dictionary);
         model.setCityFilter(null);
+        if(model.getDictionarySize()!=0){
+            Alert success = new Alert(Alert.AlertType.INFORMATION);
+            success.setTitle("Dictionary Loaded");
+            success.setHeaderText("Dictionary successfully loaded");
+            success.showAndWait();
+        }
+        else {
+            Alert failure = new Alert(Alert.AlertType.ERROR);
+            failure.setHeaderText("counld not load dictionary. Make sure the posting list path you inserted is the correct one");
+            failure.setTitle("Could Not Load Dictionary");
+            failure.showAndWait();
+        }
         actionAllButtons(false);
     }
 
@@ -320,7 +333,7 @@ public class View implements Observer{
      * Disable or enable all buttons according to the input disable.
      * @param disable- the action we wish to perform on the buttons.
      */
-    private void actionAllButtons(boolean disable){
+    private void actionAllButtons(boolean disable) {
         tf_corpusPath.setEditable(!disable);
         tf_postingListPath.setEditable(!disable);
         btn_corpusFileSystem.setDisable(disable);
@@ -338,6 +351,9 @@ public class View implements Observer{
         cb_useSemantics.setDisable(disable);
         cb_spellCheck.setDisable(disable);
         tf_queryFilePath.setEditable(!disable);
+        btn_queryResultFilesPath.setDisable(disable);
+        tf_queryResultFilePath.setEditable(!disable);
+        btn_filteByCities.setDisable(disable);
     }
 
     /**
@@ -429,7 +445,7 @@ public class View implements Observer{
             return;
         }
         final Stage dialog = new Stage();
-        dialog.initModality(Modality.NONE);
+//        dialog.initModality(Modality.NONE);
         VBox dialogVbox = new VBox(20);
         dialogVbox.getChildren().addAll(/*whatever you want to display*/);
 
@@ -444,8 +460,8 @@ public class View implements Observer{
         hBox_suggested.getChildren().addAll(naturalQueryDisplayer);
         Button btn_fixSuggestion = new Button("This is what I meant");
         btn_fixSuggestion.setOnAction(e-> {
-             dialog.close();
              queryFromUser(naturalQueryDisplayer.getQuery());
+            dialog.close();
         });
         hBox_suggested.getChildren().addAll(btn_fixSuggestion);
 
@@ -454,8 +470,8 @@ public class View implements Observer{
         hBox_CorrectQuery.getChildren().addAll(askUser);
         Button btn_userIsSure = new Button("Yes, I'm Sure");
         btn_userIsSure.setOnAction(e-> {
-            dialog.close();
             queryFromUser(tf_naturalLanguageQuery.getText());
+            dialog.close();
         });
         hBox_CorrectQuery.getChildren().addAll(btn_userIsSure);
 
@@ -477,16 +493,21 @@ public class View implements Observer{
     }
 
     private void queryFromUser(String query){
+        System.out.println(query);
         model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
         List<Document> rankedDocuments =  model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
         RankedDocumentDisplayer rankedDocumentDisplayer = new RankedDocumentDisplayer(rankedDocuments);
 
         final Stage dialog = new Stage();
-        dialog.initModality(Modality.NONE);
+        dialog.initModality(Modality.WINDOW_MODAL);
         Button close = new Button("Close");
         close.setOnAction(event -> {dialog.close();});
-        rankedDocumentDisplayer.getItems().add(close);
-        Scene dialogScene = new Scene(rankedDocumentDisplayer, 550, 1000);
+        rankedDocumentDisplayer.getChildren().addAll(close);
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(rankedDocumentDisplayer);
+        scrollPane.setPannable(true);
+
+        Scene dialogScene = new Scene(scrollPane, 550, 700);
         dialog.setScene(dialogScene);
         dialog.setTitle("Query Results");
         dialog.showAndWait();
@@ -539,6 +560,7 @@ public class View implements Observer{
             allCityNames = model.getAllCityNames(tf_postingListPath.getText() +fileSeparator+ "postingLists.txt", tf_postingListPath.getText() +fileSeparator+ "cityIndex.txt");
             selectedCityNames = model.getAllSelectedCityNames();
             ListView listView = new ListView();
+            listView.setDisable(false);
             for (String cityName:allCityNames) {
                 CheckBox cityCheckBox = new CheckBox(cityName);
                 boolean selectBox = selectedCityNames.contains(cityName);

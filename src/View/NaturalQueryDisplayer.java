@@ -5,10 +5,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class NaturalQueryDisplayer extends MenuBar {
     
@@ -16,17 +13,18 @@ public class NaturalQueryDisplayer extends MenuBar {
     private String[] query;
     private Map<String,List<String>> suggestedQuery;
     private Menu[] queryMenu;
+    private Map<Menu,Integer> locationsOfMenus=new LinkedHashMap<>();
     
     
     public NaturalQueryDisplayer(List<String> originalQuery){
         super();
-        this.query= getOriginalQuey(originalQuery);
+        this.query= getOriginalQuery(originalQuery);
         suggestedQuery = getSuggestedQuery(originalQuery);
         queryMenu = setQueryMenu(originalQuery);
         getMenus().addAll(queryMenu);
     }
 
-    private String[] getOriginalQuey(List<String> oq){
+    private String[] getOriginalQuery(List<String> oq){
         String[] ans = new String[oq.size()];
         for (int i = 0; i < ans.length; i++) {
             ans[i] = oq.get(i);
@@ -40,6 +38,7 @@ public class NaturalQueryDisplayer extends MenuBar {
             String originalWord = originalQuery.get(i);
             List<String> suggested = suggestedQuery.get(originalWord);
             toReturn[i] = createMenu(originalWord,suggested);
+            this.locationsOfMenus.putIfAbsent(toReturn[i],i);
         }
         return toReturn;
     }
@@ -48,7 +47,7 @@ public class NaturalQueryDisplayer extends MenuBar {
         Menu toReturn = new Menu(suggested.get(0));
         for (int i = 0; i < suggested.size(); i++) {
             MenuItem menuItem = new MenuItem(suggested.get(i));
-            String s = suggested.get(i);
+            final String s = new String(suggested.get(i));
             menuItem.setOnAction(event-> {
                 changeQuery(toReturn,s);
             });
@@ -58,13 +57,8 @@ public class NaturalQueryDisplayer extends MenuBar {
     }
 
     private void changeQuery(Menu toReturn, String s) {
-        String originalWord = toReturn.getText();
-        toReturn.setText(s);
-        for (int i = 0; i < this.query.length; i++) {
-            if(query[i].equals(originalWord)){
-                query[i] = s;
-            }
-        }
+        int i = this.locationsOfMenus.get(toReturn);
+        query[i]=s;
     }
 
     private Map<String,List<String>> getSuggestedQuery(List<String> originalQuery) {
@@ -95,6 +89,8 @@ public class NaturalQueryDisplayer extends MenuBar {
                 }
                 related = upperCase;
             }
+            if(!query[i].toLowerCase().equals(related.get(0).toLowerCase()))
+                query[i]=related.get(0);
             suggestedQuery.put(originalQuery.get(i),related);
         }
         return suggestedQuery;
