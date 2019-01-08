@@ -351,6 +351,14 @@ public class ReadFile {
         return parse.getAllDocumentLanguages();
     }
 
+
+    /**
+     * Run's queries from input query using spell check and semantic by the params input.
+     * @param query- query to run.
+     * @param spellCheck- boolean for using spell check.
+     * @param numOfSynonyms- number of synonyms words to add to each query term.
+     * @return- list of top ranked documents
+     */
     public List<Document> runQueryFromUser(String query, boolean spellCheck, int numOfSynonyms){
         deleteResultsFile();
         List<String> queryLine=new ArrayList<>();
@@ -359,6 +367,12 @@ public class ReadFile {
         return runQuery(queryLine,null,spellCheck,numOfSynonyms,queryID);
     }
 
+    /**
+     * Run's queries from input queriesFilePath using spell check and semantic by the params input.
+     * @param queriesFilePath- queries file path
+     * @param spellCheck- boolean for using spell check.
+     * @param numOfSynonyms- number of synonyms words to add to each query term.
+     */
     public void runQueriesFromFile(String queriesFilePath,boolean spellCheck, int numOfSynonyms){
         deleteResultsFile();
         List<String>queryTitleLines=new ArrayList<>();
@@ -394,6 +408,15 @@ public class ReadFile {
         }
     }
 
+    /**
+     * Run input query and returns a list of top ranked documents.
+     * @param queryTitle- the query title.
+     * @param queryDiscription- the query description.
+     * @param spellCheck- boolean for using spell check.
+     * @param numOfSynonyms- number of synonyms words to add to each query term.
+     * @param queryID- the query ID.
+     * @return- a list of top ranked documents.
+     */
     private List<Document> runQuery(List<String> queryTitle, List<String> queryDiscription, boolean spellCheck, int numOfSynonyms, int queryID){
         List<ATerm> queryTitleTerms= parse.parseQuery(queryTitle,spellCheck,numOfSynonyms);
         List<ATerm> queryDiscriptionTerms=null;
@@ -407,6 +430,15 @@ public class ReadFile {
         return releventDocuments;
     }
 
+    /**
+     * Writes query results to a file.
+     * @param queryID- the query ID.
+     * @param iter- param for Treceval.
+     * @param docNO- document name.
+     * @param rank-param for Treceval.
+     * @param sim-param for Treceval.
+     * @param run_ID-param for Treceval.
+     */
     private void writeResultToFile(int queryID,int iter,String docNO,double rank,float sim,String run_ID) {
         String pathName = postingFilesPath + fileSeparator +"results.txt";
         File file = new File(pathName);
@@ -419,6 +451,9 @@ public class ReadFile {
         }
     }
 
+    /**
+     * Delete's previous result file.
+     */
     private void deleteResultsFile() {
         String pathName = postingFilesPath + fileSeparator +"results.txt";
         File file = new File(pathName);
