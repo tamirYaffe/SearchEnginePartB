@@ -44,11 +44,12 @@ public class Ranker {
 
     /**
      * Rank's the corpus documents by the input queryTitleTerms and queryDescriptionTerms.
-     * @param queryTitleTerms- the query title terms.
-     * @param queryDescriptionTerms- the query description terms.
+     * @param queryTitleTerms - the query title terms.
+     * @param queryDescriptionTerms - the query description terms.
+     * @param allowedDocuments
      * @return List of top ranked documents, size of numOfDocumentsToReturn.
      */
-    public List<Document> rankDocuments(List<ATerm> queryTitleTerms, List<ATerm> queryDescriptionTerms){
+    public List<Document> rankDocuments(List<ATerm> queryTitleTerms, List<ATerm> queryDescriptionTerms, List<Document> allowedDocuments){
         rankedDocs.clear();
         maxRankedDocs.clear();
         minRankedDocs.clear();
@@ -70,7 +71,8 @@ public class Ranker {
             if(postingLists.get(i)!=null){
                 PostingEntry postingEntry = postingLists.get(i).RemoveFirst();
                 while(postingEntry!=null){
-                    documentQueue.add(new Pair<>(postingEntry,i));
+                    if(allowedDocuments==null || allowedDocuments.contains(new Document(postingEntry.getDocID())))
+                        documentQueue.add(new Pair<>(postingEntry,i));
                     postingEntry= postingLists.get(i).RemoveFirst();
                 }
             }

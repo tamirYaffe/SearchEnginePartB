@@ -45,7 +45,7 @@ public class Document{
      * Returns the document lines.
      * @return- the document lines.
      */
-    public List<String> getDocumentsLines() {
+    private List<String> getDocumentsLines() {
         loadDocPointerInfo();
         List<String> fileList = new ArrayList<>();
         BufferedReader reader;
