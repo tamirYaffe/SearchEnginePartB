@@ -51,6 +51,7 @@ public class ReadFile {
         this.postingFilesPath = postingFilesPath;
         //added
         Document.postingFilesPath=postingFilesPath;
+        Document.corpusPath=corpusPath;
         this.indexer = indexer;
         if (useStemming)
             parse = new ParseWithStemming();
@@ -60,6 +61,18 @@ public class ReadFile {
         File directory = new File("blocks");
         if (! directory.exists()){
             directory.mkdir();
+        }
+    }
+
+    /**
+     * Delete's all posting files in input postingFilePath.
+     * @param postingFilesPath- path of posting files.
+     */
+    public static void deletePostingFiles(String postingFilesPath){
+        File dir = new File(postingFilesPath);
+        for (File file : dir.listFiles()){
+            if (!file.isDirectory())
+                file.delete();
         }
     }
 
