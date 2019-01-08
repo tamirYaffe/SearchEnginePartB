@@ -4,6 +4,9 @@ import SearchEngineTools.Document;
 
 import java.util.Comparator;
 
+/**
+ * A comparator for min priority queue of documents.
+ */
 public class MaxRankedDocumentsComparator implements Comparator<Document> {
     @Override
     public int compare(Document o1, Document o2) {
