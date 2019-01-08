@@ -1,14 +1,30 @@
 package View;
 
 import Model.Model;
+import SearchEngineTools.Document;
+import SearchEngineTools.Indexer;
+import SearchEngineTools.ParsingTools.TokenList.TextTokenList;
+import SearchEngineTools.Ranker.Ranker;
+import SearchEngineTools.ReadFile;
+import SearchEngineTools.datamuse.DatamuseQuery;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 import javax.swing.*;
@@ -22,7 +38,9 @@ public class View implements Observer{
     private Stage primaryStage;
     private String fileSeparator=System.getProperty("file.separator");
     private boolean useStemming=false;
+    private int maxSynonyms = 2;
     private Model model;
+
 
 
 
@@ -37,6 +55,15 @@ public class View implements Observer{
     public Button btn_showDictionary;
     public Button btn_deleteAll;
     public Menu menu_languages;
+    public TextField tf_naturalLanguageQuery;
+    public Button btn_naturalLanguageQuery;
+    public Button btn_fileQuery;
+    public Button btn_queryFilesPath;
+    public CheckBox cb_useSemantics;
+    public CheckBox cb_spellCheck;
+    public TextField tf_queryFilePath;
+    public Button btn_queryResultFilesPath;
+    public TextField tf_queryResultFilePath;
     public JTextArea jTextArea;
 
 
@@ -55,24 +82,93 @@ public class View implements Observer{
      * Opens the file system for the user to choose the corpus path.
      */
     public void onClickCorpusFileSystem(){
+        onClickOpenFileSystem(tf_corpusPath);
+    }
+
+    private void onClickOpenFileSystem(TextField pathTextField){
         actionAllButtons(true);
-        String selectedDirectory=openFileSystem();
+        String selectedDirectory = openFileSystem();
         if(selectedDirectory!=null)
-            tf_corpusPath.setText(selectedDirectory);
+            pathTextField.setText(selectedDirectory);
         actionAllButtons(false);
     }
+
 
     /**
      * Opens the file system for the user to choose the posting files path.
      */
     public void onClickPostingListFileSystem(){
+        onClickOpenFileSystem(tf_postingListPath);
+    }
+
+    public void onClickQueryFileSystem(){
+        onClickChooseFile(tf_queryFilePath);
+    }
+
+    private void onClickChooseFile(TextField pathTextField){
         actionAllButtons(true);
-        String selectedDirectory=openFileSystem();
-        if(selectedDirectory!=null)
-            tf_postingListPath.setText(selectedDirectory);
+        final FileChooser fileChooser = new FileChooser();
+        File selectedFile =fileChooser.showOpenDialog(primaryStage);
+        if(selectedFile==null){
+            actionAllButtons(false);
+            return;
+        }
+        String path = selectedFile.getAbsolutePath();
+        if(path!=null)
+            pathTextField.setText(path);
         actionAllButtons(false);
     }
 
+
+
+    private void executeNaturalLanguageQuery(String text) {
+        //get original query
+        List<String> originalQuery = new ArrayList<>();
+        for (int indexOfSpace = text.indexOf(' '); indexOfSpace!=-1; indexOfSpace = text.indexOf(' ')){
+            String word = text.substring(0,indexOfSpace);
+            if(!(word.equals("") || word.equals(" ")))
+                originalQuery.add(word);
+            text=text.substring(indexOfSpace+1);
+        }
+        //showSuggestedQuery(originalQuery);
+    }
+
+
+
+    private void setQueryWord(Menu menu, CheckMenuItem checkMenuItemToEnable) {
+        ObservableList<MenuItem> checkMenuItems=menu.getItems();
+        for (MenuItem menuItem:checkMenuItems) {
+            if(menuItem.equals(checkMenuItemToEnable)){
+                CheckMenuItem checkMenuItem = (CheckMenuItem) menuItem;
+                checkMenuItem.setSelected(true);
+            }
+        }
+    }
+
+    private List<String> getNaturalLanguageText() {
+        String queryFieldText = this.tf_naturalLanguageQuery.getText();
+        List<String> toReturn = new ArrayList<>();
+        int indexOfNextSpace = queryFieldText.indexOf(' ');
+        TextTokenList textTokenList = new TextTokenList();
+        List<String> queryAsList = new ArrayList<>();
+        queryAsList.add(queryFieldText);
+        Collection<Character> currencySymbols = new HashSet<>();
+        currencySymbols.add('$');
+        Collection<Character> delimitersToSplitWordBy = new ArrayList<>();
+        delimitersToSplitWordBy.add('-');
+        textTokenList.initialize(queryAsList,currencySymbols,delimitersToSplitWordBy,new ArrayList<>());
+        while (!textTokenList.isEmpty()){
+            toReturn.add(textTokenList.pop().getTokenString());
+        }
+        return toReturn;
+    }
+
+    private void showAndWaitFailedQueryAlert(String problem){
+        Alert bothFields = new Alert(Alert.AlertType.ERROR);
+        bothFields.setHeaderText("Please Specify a Single Query");
+        bothFields.setHeaderText("Both Query Fields are "+problem);
+        bothFields.setContentText("Please insert natural language query or select a queries file from which to query");
+    }
 
 
     /**
@@ -117,6 +213,14 @@ public class View implements Observer{
      */
     public void onClickLoadDictionary(){
         actionAllButtons(true);
+        Map<String,Pair<Integer,Integer>> dictionary = getDictionary();
+        //load dictionary to index dictionary
+        model.loadDictionary(dictionary);
+        model.setCityFilter(null);
+        actionAllButtons(false);
+    }
+
+    private Map<String,Pair<Integer,Integer>> getDictionary(){
         Map<String, Pair<Integer,Integer>> dictionary=new HashMap<>();
         int postingListPointer=0;
         try {
@@ -133,10 +237,9 @@ public class View implements Observer{
         } catch (IOException e) {
             displayErrorMessage("load failed");
         }
-        //load dictionary to index dictionary
-        model.loadDictionary(dictionary);
-        actionAllButtons(false);
+        return dictionary;
     }
+
 
     /**
      * Shows the dictionary to the user.
@@ -173,7 +276,10 @@ public class View implements Observer{
      */
     public void onClickSDeleteAll(){
         actionAllButtons(true);
-        model.deleteAll();
+        if(tf_postingListPath.getText().length()==0){
+            displayErrorMessage("please enter posting list path from which to delete");
+        }
+        model.deleteAll(tf_postingListPath.getText());
         deletePostingFiles(true);
         deletePostingFiles(false);
         menu_languages.getItems().clear();
@@ -215,15 +321,23 @@ public class View implements Observer{
      * @param disable- the action we wish to perform on the buttons.
      */
     private void actionAllButtons(boolean disable){
+        tf_corpusPath.setEditable(!disable);
+        tf_postingListPath.setEditable(!disable);
         btn_corpusFileSystem.setDisable(disable);
         btn_postingListFileSystem.setDisable(disable);
-        btn_deleteAll.setDisable(disable);
+        cb_useStemming.setDisable(disable);
+        btn_startIndex.setDisable(disable);
         btn_loadDictionary.setDisable(disable);
         btn_showDictionary.setDisable(disable);
-        btn_startIndex.setDisable(disable);
-        cb_useStemming.setDisable(disable);
-        tf_corpusPath.setDisable(disable);
-        tf_postingListPath.setDisable(disable);
+        btn_deleteAll.setDisable(disable);
+        menu_languages.setDisable(disable);
+        tf_naturalLanguageQuery.setEditable(!disable);
+        btn_naturalLanguageQuery.setDisable(disable);
+        btn_fileQuery.setDisable(disable);
+        btn_queryFilesPath.setDisable(disable);
+        cb_useSemantics.setDisable(disable);
+        cb_spellCheck.setDisable(disable);
+        tf_queryFilePath.setEditable(!disable);
     }
 
     /**
@@ -272,5 +386,256 @@ public class View implements Observer{
         addLanguages();
         actionAllButtons(false);
 
+    }
+
+    private void showNoQueryResultFileAlert(){
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("No Path To Results file found");
+        alert.setContentText("Please make sure path to results file is correctly inserted ins specified text box");
+        alert.setHeaderText("");
+        alert.showAndWait();
+    }
+
+    private void showNoQueryFoundAlert(String contentText){
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("No query found");
+        alert.setContentText(contentText);
+        alert.setHeaderText("");
+        alert.showAndWait();
+    }
+
+    public void onClickNaturalLanguageQuery(){
+        actionAllButtons(true);
+
+        if(tf_queryResultFilePath.getText().equals("")){
+            showNoQueryResultFileAlert();
+            actionAllButtons(false);
+            return;
+        }
+
+        if(tf_naturalLanguageQuery.getText()==null ||tf_naturalLanguageQuery.getText().equals("")){
+            showNoQueryFoundAlert("Please type a query");
+            actionAllButtons(false);
+            return;
+        }
+        if(tf_corpusPath.getText().length()==0){
+            displayErrorMessage("Add path to input corpus");
+            actionAllButtons(false);
+            return;
+        }
+        if(model.getDictionarySize()==0){
+            displayErrorMessage("No Dictionary Loaded");
+            actionAllButtons(false);
+            return;
+        }
+        final Stage dialog = new Stage();
+        dialog.initModality(Modality.NONE);
+        VBox dialogVbox = new VBox(20);
+        dialogVbox.getChildren().addAll(/*whatever you want to display*/);
+
+        Label label = new Label("Please make sure that you typed the correct query");
+        dialogVbox.getChildren().addAll(label);
+
+
+        HBox hBox_suggested = new HBox();
+        Label suggest = new Label("May we suggest: ");
+        hBox_suggested.getChildren().addAll(suggest);
+        NaturalQueryDisplayer naturalQueryDisplayer = new NaturalQueryDisplayer(getNaturalLanguageText());
+        hBox_suggested.getChildren().addAll(naturalQueryDisplayer);
+        Button btn_fixSuggestion = new Button("This is what I meant");
+        btn_fixSuggestion.setOnAction(e-> {
+             dialog.close();
+             queryFromUser(naturalQueryDisplayer.getQuery());
+        });
+        hBox_suggested.getChildren().addAll(btn_fixSuggestion);
+
+        HBox hBox_CorrectQuery = new HBox();
+        Label askUser = new Label("are you sure that"+'"'+' '+ tf_naturalLanguageQuery.getText()+'"'+" is the correct query");
+        hBox_CorrectQuery.getChildren().addAll(askUser);
+        Button btn_userIsSure = new Button("Yes, I'm Sure");
+        btn_userIsSure.setOnAction(e-> {
+            dialog.close();
+            queryFromUser(tf_naturalLanguageQuery.getText());
+        });
+        hBox_CorrectQuery.getChildren().addAll(btn_userIsSure);
+
+        Button btn_cancel = new Button("Cancel");
+
+        btn_cancel.setOnAction(event -> {
+            dialog.close();
+        });
+
+        dialogVbox.getChildren().add(hBox_CorrectQuery);
+        dialogVbox.getChildren().add(hBox_suggested);
+        dialogVbox.getChildren().add(btn_cancel);
+
+        Scene dialogScene = new Scene(dialogVbox, 550, 230);
+        dialog.setScene(dialogScene);
+        dialog.setTitle("Double Check Your Query");
+        dialog.showAndWait();
+        actionAllButtons(false);
+    }
+
+    private void queryFromUser(String query){
+        model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
+        List<Document> rankedDocuments =  model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
+        RankedDocumentDisplayer rankedDocumentDisplayer = new RankedDocumentDisplayer(rankedDocuments);
+        ScrollPane scrollPane = new ScrollPane(rankedDocumentDisplayer);
+        final Stage dialog = new Stage();
+        dialog.initModality(Modality.NONE);
+        Button close = new Button("Close");
+        close.setOnAction(event -> {dialog.close();});
+        rankedDocumentDisplayer.getChildren().add(close);
+        Scene dialogScene = new Scene(rankedDocumentDisplayer, 550, 1000);
+        dialog.setScene(dialogScene);
+        dialog.setTitle("Query Results");
+        dialog.showAndWait();
+    }
+
+    private void query(List<String> query) {
+        /*Map<String,Pair<Integer,Integer>> dictionary = getDictionary();
+        String corpusPath;
+        if(tf_corpusPath.getText().length()!=0)
+                corpusPath = tf_corpusPath.getText();
+        else {
+            Alert enterCorpusPath = new Alert(Alert.AlertType.ERROR);
+            enterCorpusPath.setTitle("no path for corpus path");
+            enterCorpusPath.setContentText("Please enter corpus path in specified text-field");
+            enterCorpusPath.setHeaderText("");
+            enterCorpusPath.showAndWait();
+            return;
+        }
+        if(tf_postingListPath.getText().length()==0){
+            Alert enterCorpusPath = new Alert(Alert.AlertType.ERROR);
+            enterCorpusPath.setTitle("no path for corpus path");
+            enterCorpusPath.setContentText("Please enter posting list path in specified text-field");
+            enterCorpusPath.setHeaderText("");
+            enterCorpusPath.showAndWait();
+            return;
+        }
+        Ranker ranker = new Ranker(dictionary,tf_postingListPath.getText(),useStemming,Integer.MAX_VALUE);
+        ReadFile readFile = new ReadFile(new Indexer(),corpusPath,tf_postingListPath.getText(),useStemming);
+        boolean useSemantics = cb_useSemantics.isSelected();
+        readFile.setRanker(ranker);
+        List<>
+
+
+    }
+
+    private void query(String text) {
+    }*/
+    }
+
+    public void onClickFilterByCities(ActionEvent actionEvent) {
+        actionAllButtons(true);
+        try {
+            VBox vBox = new VBox(10);
+            CheckBox cb_selectAll = new CheckBox("select all");
+            List<String> allCityNames;
+            Collection<String> selectedCityNames;
+            List<CheckBox> allCheckBoxes = new ArrayList<>();
+            final Stage dialog = new Stage();
+            dialog.initModality(Modality.NONE);
+            allCityNames = model.getAllCityNames(tf_postingListPath.getText() +fileSeparator+ "postingLists.txt", tf_postingListPath.getText() +fileSeparator+ "cityIndex.txt");
+            selectedCityNames = model.getAllSelectedCityNames();
+            ListView listView = new ListView();
+            for (String cityName:allCityNames) {
+                CheckBox cityCheckBox = new CheckBox(cityName);
+                boolean selectBox = selectedCityNames.contains(cityName);
+                cityCheckBox.setSelected(selectBox);
+                cityCheckBox.setOnAction(event -> {
+                    if(!cityCheckBox.isSelected()) {
+                        model.removeCity(cityName);
+                        cb_selectAll.setSelected(false);
+                    }
+                    else
+                        model.addCity(cityName);
+                    System.out.println("city: "+cityName+" is "+(model.getAllSelectedCityNames().contains(cityName)?"selected":"not selected"));
+                });
+                allCheckBoxes.add(cityCheckBox);
+                listView.getItems().add(cityCheckBox);
+            }
+            HBox cityList = new HBox(listView);
+            HBox hbox_selectAll = new HBox();
+            cb_selectAll.setSelected(model.allCitiesSelected());
+            cb_selectAll.setOnAction(e->{
+                boolean action = cb_selectAll.isSelected();
+                for (int i = 0; i < allCheckBoxes.size(); i++) {
+                    allCheckBoxes.get(i).setSelected(action);
+                }
+                model.selecAllCities(action);
+            });
+            hbox_selectAll.getChildren().add(cb_selectAll);
+            vBox.getChildren().addAll(hbox_selectAll);
+            cityList.setPrefHeight(500);
+            cityList.setPrefWidth(550);
+            vBox.getChildren().addAll(cityList);
+            Scene dialogScene = new Scene(vBox, 550, 650);
+            dialog.setScene(dialogScene);
+            dialog.setTitle("Filter By Cities");
+            dialog.showAndWait();
+            actionAllButtons(false);
+        }
+        catch (Exception e){
+            Alert failed = new Alert(Alert.AlertType.ERROR);
+            failed.setTitle("cannot load city filter");
+            failed.setHeaderText("cannot open file: "+tf_postingListPath.getText() + fileSeparator + "postingLists.txt\n" +
+                    "or cannot find file: "+tf_postingListPath.getText() + fileSeparator + "cityIndex.txt");
+            failed.setContentText("make sure the path to the specified files is specified in the correct text box");
+            failed.showAndWait();
+            actionAllButtons(false);
+            return;
+        }
+    }
+
+    public void onClickQueryFiles(){
+        actionAllButtons(true);
+        if(tf_queryFilePath.getText().length()==0){
+            showNoQueryFoundAlert("Please select a query file");
+            actionAllButtons(false);
+            return;
+        }
+
+        if(tf_queryResultFilePath.getText().length()==0){
+            showNoQueryResultFileAlert();
+            actionAllButtons(false);
+            return;
+        }
+
+        if(tf_corpusPath.getText().length()==0){
+            displayErrorMessage("Add path to corpus input");
+            actionAllButtons(false);
+            return;
+        }
+        if(model.getDictionarySize()==0){
+            displayErrorMessage("no dicitonary loaded");
+            actionAllButtons(false);
+            return;
+        }
+        try {
+            model.queryFromFile(tf_queryFilePath.getText(),tf_postingListPath.getText(),cb_spellCheck.isSelected(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Check results in "+tf_queryResultFilePath.getText()+fileSeparator+"results.txt");
+            alert.setHeaderText("Ran queries from file");
+            alert.showAndWait();
+        }catch (Exception e){
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("unable to process queries");
+            alert.setHeaderText("please check that all paramaters are correctly inserted");
+            alert.setContentText("check the following:\n\n" +
+                    "1) path to the posting list is correctly inserted\n\n" +
+                    "(looking for file in: "+tf_postingListPath.getText()+"\n" +
+                    "2) path to query file is correctly inserted\n" +
+                    "looking for file: "+tf_queryFilePath.getText()+"\n\n" +
+                    "3) path to results file is correctly inserted\n" +
+                    "looking for file: "+tf_queryResultFilePath.getText()+"\n\n" +
+                    "4) dictionary is loaded");
+            alert.showAndWait();
+        }
+        actionAllButtons(false);
+    }
+
+    public void onClickQueryResultFileSystem(ActionEvent actionEvent) {
+        onClickOpenFileSystem(tf_queryResultFilePath);
     }
 }

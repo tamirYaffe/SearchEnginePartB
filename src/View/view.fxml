@@ -12,17 +12,17 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="bp_mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.View">
+<BorderPane fx:id="bp_mainContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.View">
    <center>
       <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
          <children>
-            <HBox prefHeight="56.0" prefWidth="595.0">
+            <HBox prefHeight="52.0" prefWidth="600.0">
                <children>
                   <Label text="corpus path">
                      <HBox.margin>
                         <Insets left="10.0" />
                      </HBox.margin></Label>
-                  <TextField fx:id="tf_corpusPath" promptText="Enter diractory">
+                  <TextField fx:id="tf_corpusPath" prefHeight="42.0" prefWidth="187.0" promptText="Enter diractory">
                      <HBox.margin>
                         <Insets left="42.0" />
                      </HBox.margin></TextField>
@@ -64,7 +64,7 @@
                   <Insets top="10.0" />
                </VBox.margin>
             </HBox>
-            <HBox fx:id="hbox_bottom" prefHeight="49.0" prefWidth="600.0">
+            <HBox fx:id="hbox_bottom" prefHeight="9.0" prefWidth="600.0">
                <children>
                   <Button fx:id="btn_loadDictionary" mnemonicParsing="false" onAction="#onClickLoadDictionary" text="Load dictionary">
                      <HBox.margin>
@@ -89,6 +89,73 @@
                   <Insets left="240.0" top="10.0" />
                </VBox.margin>
             </Button>
+            <HBox prefHeight="52.0" prefWidth="600.0">
+               <children>
+                  <Label text="Query using natural language">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin></Label>
+                  <TextField fx:id="tf_naturalLanguageQuery" prefHeight="42.0" prefWidth="187.0" promptText="Enter query">
+                     <HBox.margin>
+                        <Insets left="42.0" />
+                     </HBox.margin></TextField>
+                  <Button fx:id="btn_naturalLanguageQuery" mnemonicParsing="false" onAction="#onClickNaturalLanguageQuery" text="RUN" />
+               </children>
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin>
+            </HBox>
+            <HBox prefHeight="52.0" prefWidth="600.0">
+               <children>
+                  <Label text="Query files">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin></Label>
+                  <TextField fx:id="tf_queryFilePath" prefHeight="42.0" prefWidth="187.0" promptText="Enter path">
+                     <HBox.margin>
+                        <Insets left="42.0" />
+                     </HBox.margin></TextField>
+                  <Button fx:id="btn_queryFilesPath" mnemonicParsing="false" onAction="#onClickQueryFileSystem" text="Browse" />
+                  <Button fx:id="btn_fileQuery" mnemonicParsing="false" onAction="#onClickQueryFiles" text="RUN" />
+               </children>
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin>
+            </HBox>
+            <HBox prefHeight="52.0" prefWidth="600.0">
+               <children>
+                  <Label text="Query Results">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin></Label>
+                  <TextField fx:id="tf_queryResultFilePath" prefHeight="42.0" prefWidth="187.0" promptText="Enter path">
+                     <HBox.margin>
+                        <Insets left="42.0" />
+                     </HBox.margin></TextField>
+                  <Button fx:id="btn_queryResultFilesPath" mnemonicParsing="false" onAction="#onClickQueryResultFileSystem" text="Browse" />
+               </children>
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin>
+            </HBox>
+            <HBox prefHeight="52.0" prefWidth="600.0">
+               <children>
+                  <Button fx:id="btn_filterByCities" mnemonicParsing="false" onAction="#onClickFilterByCities" text="Filter By Cities" />
+               </children>
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin>
+               <CheckBox fx:id="cb_useSemantics" mnemonicParsing="false" text="use semantics">
+                  <HBox.margin>
+                     <Insets left="10.0" right="20.0" />
+                  </HBox.margin>
+               </CheckBox>
+               <CheckBox fx:id="cb_spellCheck" mnemonicParsing="false" text="automaticSpellCheck">
+                  <HBox.margin>
+                     <Insets left="10.0" right="20.0" />
+                  </HBox.margin>
+               </CheckBox>
+            </HBox>
          </children>
       </VBox>
    </center>
