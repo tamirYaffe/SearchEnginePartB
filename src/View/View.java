@@ -636,6 +636,10 @@ public class View implements Observer{
             actionAllButtons(false);
             return;
         }
+        Alert startedQueries = new Alert(Alert.AlertType.INFORMATION);
+        startedQueries.setTitle("Running queries from file "+'"'+tf_queryFilePath.getText()+'"');
+        startedQueries.setHeaderText("Your results will be displayed shortly");
+        startedQueries.showAndWait();
         try {
             model.queryFromFile(tf_queryFilePath.getText(),tf_postingListPath.getText(),cb_spellCheck.isSelected(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
