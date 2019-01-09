@@ -7,6 +7,7 @@ import SearchEngineTools.Ranker.Ranker;
 import javafx.util.Pair;
 import sun.awt.Mutex;
 import org.apache.commons.io.FileUtils;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,36 +42,38 @@ public class ReadFile {
 
     /**
      * Constructor
-     * @param indexer- indexer to use.
-     * @param corpusPath- the corpus path.
+     *
+     * @param indexer-          indexer to use.
+     * @param corpusPath-       the corpus path.
      * @param postingFilesPath- the posting files path.
-     * @param useStemming- indicates which parse to use..
+     * @param useStemming-      indicates which parse to use..
      */
     public ReadFile(Indexer indexer, String corpusPath, String postingFilesPath, boolean useStemming) {
         this.corpusPath = corpusPath;
         this.postingFilesPath = postingFilesPath;
         //added
-        Document.postingFilesPath=postingFilesPath;
-        Document.corpusPath=corpusPath;
+        Document.postingFilesPath = postingFilesPath;
+        Document.corpusPath = corpusPath;
         this.indexer = indexer;
         if (useStemming)
             parse = new ParseWithStemming();
         else
             parse = new Parse();
-        this.useStemming=useStemming;
+        this.useStemming = useStemming;
         File directory = new File("blocks");
-        if (! directory.exists()){
+        if (!directory.exists()) {
             directory.mkdir();
         }
     }
 
     /**
      * Delete's all posting files in input postingFilePath.
+     *
      * @param postingFilesPath- path of posting files.
      */
-    public static void deletePostingFiles(String postingFilesPath){
+    public static void deletePostingFiles(String postingFilesPath) {
         File dir = new File(postingFilesPath);
-        for (File file : dir.listFiles()){
+        for (File file : dir.listFiles()) {
             if (!file.isDirectory())
                 file.delete();
         }
@@ -82,10 +85,11 @@ public class ReadFile {
 
     /**
      * The main method of the class, controls all other methods.
+     *
      * @return- number of docs in the corpus.
      */
     public int listAllFiles() {
-        numOfDocs=0;
+        numOfDocs = 0;
         String path = corpusPath;
         createStopWords(path);
         Document.corpusPath = path;
@@ -118,12 +122,13 @@ public class ReadFile {
             e.printStackTrace();
         }
         deletePrevFiles();
-        Document.setDocumentsInfo(documentsSumLenght/numOfDocs,numOfDocs);
+        Document.setDocumentsInfo(documentsSumLenght / numOfDocs, numOfDocs);
         return numOfDocs;
     }
 
     /**
      * Load stop_words.txt to stopWords var.
+     *
      * @param path- the path of the stop words file.
      */
     private void createStopWords(String path) {
@@ -145,6 +150,7 @@ public class ReadFile {
 
     /**
      * Reads the content of the file.
+     *
      * @param filePath - path of the file.
      * @return - list of file lines.
      */
@@ -186,6 +192,7 @@ public class ReadFile {
 
     /**
      * Divide the input fileList into documents and activate the parse on them.
+     *
      * @param fileList- the file lines to divide.
      * @param filePath- the path of the file.
      */
@@ -195,25 +202,25 @@ public class ReadFile {
         int startLineNumInt = 0;
         int endLineNumInt = 0;
         int numOfLinesInt = 0;
-        String docNO=null;
+        String docNO = null;
         for (String line : fileList) {
             docLines.add(line);
-            if(line.contains("<DOCNO>")){
-                docNO=line.substring(7,line.length()-8);
-                if(docNO.charAt(0)==' ')
-                    docNO=docNO.substring(1);
-                if(docNO.charAt(docNO.length()-1)==' ')
-                    docNO=docNO.substring(0,docNO.length()-1);
+            if (line.contains("<DOCNO>")) {
+                docNO = line.substring(7, line.length() - 8);
+                if (docNO.charAt(0) == ' ')
+                    docNO = docNO.substring(1);
+                if (docNO.charAt(docNO.length() - 1) == ' ')
+                    docNO = docNO.substring(0, docNO.length() - 1);
             }
             endLineNumInt++;
             numOfLinesInt++;
             if (line.equals("</DOC>")) {
                 Collection<ATerm> terms = parse.parseDocument(docLines);
-                int docLength=parse.getLastParsedDocumentLength();
-                documentsSumLenght+=docLength;
+                int docLength = parse.getLastParsedDocumentLength();
+                documentsSumLenght += docLength;
                 createDoc(filePath, startLineNumInt, numOfLinesInt);
                 //add the parse terms to the producer-consumer buffer.
-                Document document=new Document(numOfDocs);
+                Document document = new Document(numOfDocs);
                 document.setDocLength(docLength);
                 document.setDOCNO(docNO);
                 PIBuffer.add(new Pair(terms.iterator(), document));
@@ -249,9 +256,10 @@ public class ReadFile {
 
     /**
      * Adds the input vars to document buffer that writes them to Documents file in disk.
-     * @param filePath- the file path.
+     *
+     * @param filePath-     the file path.
      * @param startLineNum- the line that the document start in.
-     * @param numOfLines- number of the document lines.
+     * @param numOfLines-   number of the document lines.
      */
     private void createDoc(Path filePath, int startLineNum, int numOfLines) {
         String fileName = extractFileName(filePath.toString());
@@ -270,11 +278,11 @@ public class ReadFile {
      */
     private void writeDocumentsToDisk() {
         String fileName;
-        if(useStemming)
-            fileName="DocumentsStemming.txt";
+        if (useStemming)
+            fileName = "DocumentsStemming.txt";
         else
-            fileName="Documents.txt";
-        String pathName = postingFilesPath + fileSeparator +fileName;
+            fileName = "Documents.txt";
+        String pathName = postingFilesPath + fileSeparator + fileName;
         File file = new File(pathName);
         try (FileWriter fw = new FileWriter(file, true);
              BufferedWriter bw = new BufferedWriter(fw)) {
@@ -289,6 +297,7 @@ public class ReadFile {
 
     /**
      * Extract and returns the input path file name.
+     *
      * @param path- the file path.
      * @return -the input path file name.
      */
@@ -305,7 +314,7 @@ public class ReadFile {
      */
     public static void deletePrevFiles() {
         File dir = new File("blocks");
-        for (File file : dir.listFiles()){
+        for (File file : dir.listFiles()) {
             if (!file.isDirectory())
                 file.delete();
         }
@@ -314,152 +323,15 @@ public class ReadFile {
 
     /**
      * Reads the stop words into the stopWords var.
+     *
      * @param filePath- the path of the stop words.
      */
     private void readStopWords(File filePath) {
-        stopWords=ReadFile.getStopWords(filePath.getPath());
-    }
-
-    /**
-     * Clears all the class data structures.
-     */
-    public void clear() {
-        stopWords.clear();
-    }
-
-    /**
-     * Returns all the corpus documents languages.
-     * @return- all the corpus documents languages.
-     */
-    public Collection <String> getLanguages(){
-        return parse.getAllDocumentLanguages();
-    }
-
-
-    /**
-     * Run's queries from input query using spell check and semantic by the params input.
-     * @param query- query to run.
-     * @param spellCheck- boolean for using spell check.
-     * @param numOfSynonyms- number of synonyms words to add to each query term.
-     * @return- list of top ranked documents
-     */
-    public List<Document> runQueryFromUser(String query, boolean spellCheck, int numOfSynonyms,String resultFilePath,List<Document> allowedDocuments){
-        deleteResultsFile();
-        List<String> queryLine=new ArrayList<>();
-        queryLine.add(query);
-        int queryID= (int) (Math.random()*100);
-        return runQuery(queryLine,null,spellCheck,numOfSynonyms,queryID,resultFilePath,allowedDocuments);
-    }
-
-    /**
-     * Run's queries from input queriesFilePath using spell check and semantic by the params input.
-     * @param queriesFilePath- queries file path
-     * @param spellCheck- boolean for using spell check.
-     * @param numOfSynonyms- number of synonyms words to add to each query term.
-     */
-    public void runQueriesFromFile(String queriesFilePath,boolean spellCheck, int numOfSynonyms,String resultFilePath,List<Document> allowedDocuments){
-        deleteResultsFile();
-        List<String>queryTitleLines=new ArrayList<>();
-        List<String>queryDescLines=new ArrayList<>();
-        List<String>fileContent=readContent(Paths.get(queriesFilePath));
-        int queryID=-1;
-        for (int i=0;i<fileContent.size();i++) {
-            String line=fileContent.get(i);
-            if(line.contains("<num>")){
-                String queryIDString=line.substring(line.indexOf(":")+2);
-                if(queryIDString.charAt(queryIDString.length()-1)==' ')
-                    queryIDString=queryIDString.substring(0,queryIDString.length()-1);
-                queryID= Integer.parseInt(queryIDString);
-            }
-            if(line.contains("<title>"))
-                queryTitleLines .add(line.substring(7));
-            if(line.contains("<desc>")){
-                i++;
-                line=fileContent.get(i);
-                while(!line.contains("<narr>")){
-                    queryDescLines.add(line);
-                    i++;
-                    line=fileContent.get(i);
-                }
-            }
-            if (line.equals("</top>")) {
-                System.out.println("running query: "+queryID);
-                runQuery(queryTitleLines,queryDescLines,spellCheck,numOfSynonyms,queryID,resultFilePath,allowedDocuments);
-                System.out.println("finished query: "+queryID);
-                queryTitleLines.clear();
-                queryDescLines.clear();
-            }
-        }
-    }
-
-    /**
-     * Run input query and returns a list of top ranked documents.
-     * @param queryTitle - the query title.
-     * @param queryDiscription - the query description.
-     * @param spellCheck - boolean for using spell check.
-     * @param numOfSynonyms - number of synonyms words to add to each query term.
-     * @param queryID - the query ID.
-     * @param resultFilePath
-     * @param allowedDocuments
-     * @return- a list of top ranked documents.
-     */
-    private List<Document> runQuery(List<String> queryTitle, List<String> queryDiscription, boolean spellCheck, int numOfSynonyms, int queryID, String resultFilePath, List<Document> allowedDocuments){
-        List<ATerm> queryTitleTerms= parse.parseQuery(queryTitle,spellCheck,numOfSynonyms);
-        List<ATerm> queryDiscriptionTerms=null;
-        if(queryDiscription!=null)
-            queryDiscriptionTerms=parse.parseQuery(queryDiscription,false,0);
-        System.out.println("starting ranking query");//fixme:remove
-        List<Document>releventDocuments=ranker.rankDocuments(queryTitleTerms,queryDiscriptionTerms,allowedDocuments);
-        //save results to resFile.
-        for(Document document:releventDocuments)
-            writeResultToFile(resultFilePath,queryID,0,document.getDOCNO(),document.getDocRank(),0,"tmr");
-        return releventDocuments;
-    }
-
-    /**
-     * Writes query results to a file.
-     * @param resultFilePath
-     * @param queryID - the query ID.
-     * @param iter - param for Treceval.
-     * @param docNO - document name.
-     * @param rank -param for Treceval.
-     * @param sim -param for Treceval.
-     * @param run_ID -param for Treceval.
-     */
-    private void writeResultToFile(String resultFilePath, int queryID, int iter, String docNO, double rank, float sim, String run_ID) {
-        String pathName = resultFilePath + fileSeparator +"results.txt";
-        File file = new File(pathName);
-        try (FileWriter fw = new FileWriter(file, true);
-             BufferedWriter bw = new BufferedWriter(fw)) {
-            bw.write(queryID+" "+iter+" "+docNO+" "+rank+" "+sim+" "+run_ID);
-            bw.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Delete's previous result file.
-     */
-    private void deleteResultsFile() {
-        String pathName = postingFilesPath + fileSeparator +"results.txt";
-        File file = new File(pathName);
-        file.delete();
-    }
-
-    /**
-     * Reads and returns the corpus stop words from the input dir path.
-     * @param path- path of the posting file dir.
-     * @return- the corpus stop words.
-     */
-    public static HashSet<String> getStopWords(String path){
-        HashSet<String> stopWords = new HashSet<>();
         BufferedReader br = null;
         FileReader fr = null;
         String line;
-        File file=new File(path);
         try {
-            fr = new FileReader(file);
+            fr = new FileReader(filePath);
             br = new BufferedReader(fr);
             while ((line = br.readLine()) != null) {
                 stopWords.add(line);
@@ -484,6 +356,169 @@ public class ReadFile {
 
             }
 
+        }
+    }
+
+    /**
+     * Clears all the class data structures.
+     */
+    public void clear() {
+        stopWords.clear();
+    }
+
+    /**
+     * Returns all the corpus documents languages.
+     *
+     * @return- all the corpus documents languages.
+     */
+    public Collection<String> getLanguages() {
+        return parse.getAllDocumentLanguages();
+    }
+
+
+    /**
+     * Run's queries from input query using spell check and semantic by the params input.
+     *
+     * @param query-         query to run.
+     * @param spellCheck-    boolean for using spell check.
+     * @param numOfSynonyms- number of synonyms words to add to each query term.
+     * @return- list of top ranked documents
+     */
+    public List<Document> runQueryFromUser(String query, boolean spellCheck, int numOfSynonyms, String resultFilePath, List<Document> allowedDocuments) {
+        deleteResultsFile();
+        List<String> queryLine = new ArrayList<>();
+        queryLine.add(query);
+        int queryID = (int) (Math.random() * 100);
+        return runQuery(queryLine, null, spellCheck, numOfSynonyms, queryID, resultFilePath, allowedDocuments);
+    }
+
+    /**
+     * Run's queries from input queriesFilePath using spell check and semantic by the params input.
+     *
+     * @param queriesFilePath- queries file path
+     * @param spellCheck-      boolean for using spell check.
+     * @param numOfSynonyms-   number of synonyms words to add to each query term.
+     */
+    public void runQueriesFromFile(String queriesFilePath, boolean spellCheck, int numOfSynonyms, String resultFilePath, List<Document> allowedDocuments) {
+        deleteResultsFile();
+        List<String> queryTitleLines = new ArrayList<>();
+        List<String> queryDescLines = new ArrayList<>();
+        List<String> fileContent = readContent(Paths.get(queriesFilePath));
+        int queryID = -1;
+        for (int i = 0; i < fileContent.size(); i++) {
+            String line = fileContent.get(i);
+            if (line.contains("<num>")) {
+                String queryIDString = line.substring(line.indexOf(":") + 2);
+                if (queryIDString.charAt(queryIDString.length() - 1) == ' ')
+                    queryIDString = queryIDString.substring(0, queryIDString.length() - 1);
+                queryID = Integer.parseInt(queryIDString);
+            }
+            if (line.contains("<title>"))
+                queryTitleLines.add(line.substring(7));
+            if (line.contains("<desc>")) {
+                i++;
+                line = fileContent.get(i);
+                while (!line.contains("<narr>")) {
+                    queryDescLines.add(line);
+                    i++;
+                    line = fileContent.get(i);
+                }
+            }
+            if (line.equals("</top>")) {
+                System.out.println("running query: " + queryID);
+                runQuery(queryTitleLines, queryDescLines, spellCheck, numOfSynonyms, queryID, resultFilePath, allowedDocuments);
+                System.out.println("finished query: " + queryID);
+                queryTitleLines.clear();
+                queryDescLines.clear();
+            }
+        }
+    }
+
+    /**
+     * Run input query and returns a list of top ranked documents.
+     *
+     * @param queryTitle       - the query title.
+     * @param queryDiscription - the query description.
+     * @param spellCheck       - boolean for using spell check.
+     * @param numOfSynonyms    - number of synonyms words to add to each query term.
+     * @param queryID          - the query ID.
+     * @param resultFilePath
+     * @param allowedDocuments
+     * @return- a list of top ranked documents.
+     */
+    private List<Document> runQuery(List<String> queryTitle, List<String> queryDiscription, boolean spellCheck, int numOfSynonyms, int queryID, String resultFilePath, List<Document> allowedDocuments) {
+        List<ATerm> queryTitleTerms = parse.parseQuery(queryTitle, spellCheck, numOfSynonyms);
+        List<ATerm> queryDiscriptionTerms = null;
+        if (queryDiscription != null)
+            queryDiscriptionTerms = parse.parseQuery(queryDiscription, false, 0);
+        System.out.println("starting ranking query");//fixme:remove
+        List<Document> releventDocuments = ranker.rankDocuments(queryTitleTerms, queryDiscriptionTerms, allowedDocuments);
+        //save results to resFile.
+        for (Document document : releventDocuments)
+            writeResultToFile(resultFilePath, queryID, 0, document.getDOCNO(), document.getDocRank(), 0, "tmr");
+        return releventDocuments;
+    }
+
+    /**
+     * Writes query results to a file.
+     *
+     * @param resultFilePath
+     * @param queryID        - the query ID.
+     * @param iter           - param for Treceval.
+     * @param docNO          - document name.
+     * @param rank           -param for Treceval.
+     * @param sim            -param for Treceval.
+     * @param run_ID         -param for Treceval.
+     */
+    private void writeResultToFile(String resultFilePath, int queryID, int iter, String docNO, double rank, float sim, String run_ID) {
+        String pathName = resultFilePath + fileSeparator + "results.txt";
+        File file = new File(pathName);
+        try (FileWriter fw = new FileWriter(file, true);
+             BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write(queryID + " " + iter + " " + docNO + " " + rank + " " + sim + " " + run_ID);
+            bw.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Delete's previous result file.
+     */
+    private void deleteResultsFile() {
+        String pathName = postingFilesPath + fileSeparator + "results.txt";
+        File file = new File(pathName);
+        file.delete();
+    }
+
+    /**
+     * Reads and returns the corpus stop words from the input dir path.
+     *
+     * @param path- path of the posting file dir.
+     * @return- the corpus stop words.
+     */
+    public static HashSet<String> getStopWords(String path) {
+        HashSet<String> stopWords = new HashSet<>();
+        File root = new File(path);
+        String fileName = "stop_words.txt";
+        try {
+            Collection files = FileUtils.listFiles(root, null, true);
+            for (Iterator iterator = files.iterator(); iterator.hasNext(); ) {
+                File file = (File) iterator.next();
+                if (file.getName().equals(fileName)) {
+                    BufferedReader br = null;
+                    FileReader fr = null;
+                    String line;
+                    fr = new FileReader(file);
+                    br = new BufferedReader(fr);
+                    while ((line = br.readLine()) != null) {
+                        stopWords.add(line);
+                    }
+                }
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return stopWords;
     }
