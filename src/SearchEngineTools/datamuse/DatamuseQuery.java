@@ -134,12 +134,23 @@ public class DatamuseQuery {
         return getJSON("http://api.datamuse.com/words?sp=" + s + "&max=" + maxResults);
     }
 
-
+    /**
+     * returns words spelled similarly to desired word
+     * @param word to check similar spelling
+     * @param maxResults maximal amount of results
+     * @return returns words spelled similarly to desired word
+     */
     public List<String> spelledSimilar(String word, int maxResults){
         String crudeAnswer = spelledSimilarMaxResults(word,maxResults);
         return splitCrudeAnswer(crudeAnswer);
     }
 
+    /**
+     * gets all synonyms of given word
+     * @param word to get synonyms of
+     * @param maxResults maximal amount of synonyms
+     * @return maximal amount of results
+     */
     public List<String> synonyms(String word, int maxResults){
         String crudeAnswer = synonymsMaxResults(word,maxResults);
         return splitCrudeAnswer(crudeAnswer);

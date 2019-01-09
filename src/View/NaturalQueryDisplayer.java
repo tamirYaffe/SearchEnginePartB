@@ -7,15 +7,26 @@ import javafx.scene.control.MenuItem;
 
 import java.util.*;
 
+/**
+ * Class is used to display a query. Menu where every menu is a different word in the query, and selecting different suggestions changes the query.
+ */
 public class NaturalQueryDisplayer extends MenuBar {
-    
-//    private DatamuseQuery datamuseQuery = new DatamuseQuery();
+
+    /**
+     * stores the query
+     */
     private String[] query;
     private Map<String,List<String>> suggestedQuery;
+    /**
+     * all menus in menubar
+     */
     private Menu[] queryMenu;
     private Map<Menu,Integer> locationsOfMenus=new LinkedHashMap<>();
-    
-    
+
+    /**
+     * Constructor for the
+     * @param originalQuery original query. will suggest alternatives for each of its words
+     */
     public NaturalQueryDisplayer(List<String> originalQuery){
         super();
         this.query= getOriginalQuery(originalQuery);
@@ -24,6 +35,11 @@ public class NaturalQueryDisplayer extends MenuBar {
         getMenus().addAll(queryMenu);
     }
 
+    /**
+     * sets the original query
+     * @param oq original query
+     * @return array with all query words as written
+     */
     private String[] getOriginalQuery(List<String> oq){
         String[] ans = new String[oq.size()];
         for (int i = 0; i < ans.length; i++) {
@@ -62,6 +78,11 @@ public class NaturalQueryDisplayer extends MenuBar {
         menu.setText(s);
     }
 
+    /**
+     * Gets the suggested query. Sets the query to the suggested query (if needed)
+     * @param originalQuery original query
+     * @return Map, original words are keys, suggested words are values
+     */
     private Map<String,List<String>> getSuggestedQuery(List<String> originalQuery) {
         HashMap<String,List<String>> suggestedQuery = new HashMap<>();
         DatamuseQuery datamuseQuery = new DatamuseQuery();
@@ -97,6 +118,10 @@ public class NaturalQueryDisplayer extends MenuBar {
         return suggestedQuery;
     }
 
+    /**
+     * gets query as it appears in the menu
+     * @return Query as it appears in the menu
+     */
     public String getQuery(){
         StringBuilder stringBuilder = new StringBuilder();
         for (String word:query) {

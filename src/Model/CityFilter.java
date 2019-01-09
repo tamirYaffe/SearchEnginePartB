@@ -11,17 +11,29 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Used To Filter By Cities. Maintains list of selected cities and allows retrieval of selected Documents
+ */
 public class CityFilter {
 
-    public Collection<String> getSelectedCities() {
-        return selectedCities;
-    }
 
+    /**
+     * Cities that are currently selected
+     */
     private Collection<String> selectedCities=new HashSet<>();
+    /**
+     * Cities and their relevant Document IDs
+     */
     private Map<String,Collection<Integer>> cityNameAndDocuments = new HashMap<>();
-   // private Map<String, Pair<Integer,Integer>> relevantDictionary;
-//    private Collection<String> cityNames;
 
+    /**
+     * Constructor For The Class.
+     * Uses relevant Files to find all cities, get their relevant documents from posting list and cityIndex
+     * @param dictionary dictionary of indexed corpus (path)
+     * @param postingFilePath posting file of indexed corpus (path)
+     * @param cityIndexPath city index of indexed Corpus (path)
+     * @throws IOException if cannot find one or more of the files
+     */
     public CityFilter(Map<String, Pair<Integer, Integer>> dictionary, String postingFilePath, String cityIndexPath) throws IOException {
         setCityNameAndDocumentsFromCityIndex(cityIndexPath);
         setCityNameAndDocumentsFromDictionary(getRelevantDictionary(dictionary,cityNameAndDocuments.keySet()),postingFilePath);
@@ -29,17 +41,29 @@ public class CityFilter {
             selectedCities.add(s);
         }
     }
-    
+
+    /**
+     * Checks if all cities are selected
+     * @return true if all cities are selected otherwise false
+     */
     public boolean allSelected(){
         return selectedCities.size()==cityNameAndDocuments.keySet().size();
     }
-    
+
+    /**
+     * Removes city from selected (if it is selected)
+     * @param cityName
+     */
     public void removeFromSelected(String cityName){
         if(selectedCities.contains(cityName))
             selectedCities.remove(cityName);
         System.out.println("ammount of cities: "+selectedCities.size());
     }
-    
+
+    /**
+     * Adds city to selected cities
+     * @param cityName city to add
+     */
     public void addToSelected(String cityName){
         if(cityNameAndDocuments.keySet().contains(cityName)) {
             if (!selectedCities.contains(cityName))
@@ -49,9 +73,7 @@ public class CityFilter {
             if (selectedCities.contains(cityName))
                 selectedCities.remove(cityName);
         }
-        System.out.println("ammount of cities "+selectedCities.size());
     }
-
 
 
     private Map<String, Pair<Integer,Integer>> getRelevantDictionary(Map<String, Pair<Integer,Integer>> dictionary,Collection<String> cityNames){
@@ -68,6 +90,12 @@ public class CityFilter {
         return relevantDictionary;
     }
 
+    /**
+     * Adds Relevant Documents based on appearances in dictionary and posting path
+     * @param relevantDictionary Dictionary that contains all cities
+     * @param postingFilePath path to posting list
+     * @throws IOException if file not found
+     */
     private void setCityNameAndDocumentsFromDictionary(Map<String, Pair<Integer,Integer>> relevantDictionary,String postingFilePath) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(postingFilePath));
 
@@ -102,30 +130,13 @@ public class CityFilter {
                     existingCollection.add(i);
             }
         }
-
-
-
-        /*Map<Integer,String> postingLinesWords = new HashMap<>();
-        for (String cityName:relevantDictionary.keySet()) {
-            postingLinesWords.putIfAbsent(relevantDictionary.get(cityName).getValue(),cityName);
-        }
-        BufferedReader reader = new BufferedReader(new FileReader(postingFilePath));
-        String line;
-        int index = 0;
-        while ((line=reader.readLine())!=null){
-            if(postingLinesWords.keySet().contains(index)){
-                String[] splitLine = line.split(" ");
-                Collection<Integer> docIDs = this.cityNameAndDocuments.get(postingLinesWords.get(index));
-                for (int i = 0; i < splitLine.length; i+=2) {
-                    int id = Integer.parseInt(splitLine[i]);
-                    if(!docIDs.contains(id))
-                        docIDs.add(id);
-                }
-            }
-            index++;
-        }*/
     }
 
+    /**
+     * Gets All cities from city index
+     * @param cityIndexPath path to city index
+     * @throws IOException if file not found
+     */
     private void setCityNameAndDocumentsFromCityIndex(String cityIndexPath) throws IOException {
         String line;
         BufferedReader reader = new BufferedReader(new FileReader(cityIndexPath));
@@ -151,16 +162,13 @@ public class CityFilter {
         }
     }
 
+    /**
+     * Gets all the Ids of selected cities
+     * @return all the Ids of selected cities
+     */
     public Collection<Integer> getSelectedDocIDs(){
         HashSet<Integer> toReturn = new HashSet<>();
         for (String s:selectedCities) {
-            if(s.equals("ABU")){
-                System.out.println("all doc ids abu:");
-                Collection<Integer> relevantDocIDs = this.cityNameAndDocuments.get(s);
-                for (int i:relevantDocIDs) {
-                    System.out.println(i);
-                }
-            }
             Collection<Integer> relevantDocIDs = this.cityNameAndDocuments.get(s);
             for (int i:relevantDocIDs) {
                 if(!toReturn.contains(i))
@@ -170,6 +178,10 @@ public class CityFilter {
         return toReturn;
     }
 
+    /**
+     * Gets all city names regardless if they are selected or not
+     * @return all city names regardless if they are selected or not
+     */
     public List<String> getAllCityNames(){
         PriorityQueue<String> priorityQueue = new PriorityQueue<>();
         priorityQueue.addAll(this.cityNameAndDocuments.keySet());
@@ -179,6 +191,10 @@ public class CityFilter {
         return toReturn;
     }
 
+    /**
+     * Selects all cities or removes them all
+     * @param selectAll true->select all, false->remove all
+     */
     public void selectOrRemoveAll(boolean selectAll){
         if(selectAll){
             for (String s:cityNameAndDocuments.keySet())
@@ -186,12 +202,18 @@ public class CityFilter {
         }
         else
             this.selectedCities.clear();
-        System.out.println("Select All Action: "+selectAll+"\n" +
-                "ammount of cities: " + selectedCities.size());
     }
 
     public Collection<Integer> getDocByCityName(String cityName){
         return this.cityNameAndDocuments.get(cityName);
+    }
+
+    /**
+     *  Gets all selected cities
+     * @return all selected cities
+     */
+    public Collection<String> getSelectedCities() {
+        return selectedCities;
     }
 
 

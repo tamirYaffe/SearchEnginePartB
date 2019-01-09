@@ -3,13 +3,9 @@ package View;
 import SearchEngineTools.Document;
 import SearchEngineTools.ParsingTools.EntityParse;
 import SearchEngineTools.ParsingTools.Term.ATerm;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -20,23 +16,37 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Class used to display documents.
+ * Displays DocNo and allows to see Documents' entities.
+ */
 public class RankedDocumentDisplayer extends VBox {
 
+    /**
+     * Documents to Display
+     */
     private List<Document> toDisplay;
     private List<Button> displayButtons=new ArrayList<>();
     private Collection<String> stopWords;
 
 
-
+    /**
+     *Constructor for the Class.
+     * @param toDisplay Documents To Display
+     * @param stopWords Stop Words (Used when parsing documents to extract entities)
+     */
     public RankedDocumentDisplayer(List<Document> toDisplay,Collection<String> stopWords) {
         super();
         this.toDisplay = toDisplay;
-        addCitiesToDisplay();
+        addDocumentsToDisplay();
         this.setSpacing(20);
         this.stopWords=stopWords;
     }
 
-    private void addCitiesToDisplay(){
+    /**
+     * Adds All documents' info and button to display their entities as needed
+     */
+    private void addDocumentsToDisplay(){
         for (Document display:toDisplay){
             HBox hBox = new HBox();
             Label label = new Label();
@@ -47,12 +57,14 @@ public class RankedDocumentDisplayer extends VBox {
                 onClickDisplayEntities(display);
             });
             hBox.getChildren().addAll(label,entities);
-            Label empty = new Label();
             this.getChildren().add(hBox);
-//            this.getChildren().addAll(label,entities, empty);
         }
     }
 
+    /**
+     * Uses EntityParse to get the ranked entities. Displays them
+     * @param document Document of which to display entities
+     */
     private void onClickDisplayEntities(Document document){
         actionAllButtons(true);
         EntityParse entityParse = new EntityParse();
