@@ -494,8 +494,8 @@ public class View implements Observer{
 
     private void queryFromUser(String query){
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Running query "+'"'+query+'"');
-        alert.setHeaderText("Your results will be displayed shortly");
+        alert.setTitle("Query "+'"'+query+'"');
+        alert.setHeaderText("After OK pressed your results will be displayed shortly");
         alert.showAndWait();
         List<Document> rankedDocuments =  model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
         RankedDocumentDisplayer rankedDocumentDisplayer = new RankedDocumentDisplayer(rankedDocuments,model.getStopWords(tf_corpusPath.getText()));

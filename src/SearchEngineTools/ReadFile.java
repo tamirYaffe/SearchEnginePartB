@@ -385,7 +385,7 @@ public class ReadFile {
      * @return- list of top ranked documents
      */
     public List<Document> runQueryFromUser(String query, boolean spellCheck, int numOfSynonyms, String resultFilePath, List<Document> allowedDocuments) {
-        deleteResultsFile();
+        deleteResultsFile(resultFilePath);
         List<String> queryLine = new ArrayList<>();
         queryLine.add(query);
         int queryID = (int) (Math.random() * 100);
@@ -400,7 +400,7 @@ public class ReadFile {
      * @param numOfSynonyms-   number of synonyms words to add to each query term.
      */
     public void runQueriesFromFile(String queriesFilePath, boolean spellCheck, int numOfSynonyms, String resultFilePath, List<Document> allowedDocuments) {
-        deleteResultsFile();
+        deleteResultsFile(resultFilePath);
         List<String> queryTitleLines = new ArrayList<>();
         List<String> queryDescLines = new ArrayList<>();
         List<String> fileContent = readContent(Paths.get(queriesFilePath));
@@ -484,9 +484,10 @@ public class ReadFile {
 
     /**
      * Delete's previous result file.
+     * @param resultFilePath
      */
-    private void deleteResultsFile() {
-        String pathName = postingFilesPath + fileSeparator + "results.txt";
+    private void deleteResultsFile(String resultFilePath) {
+        String pathName = resultFilePath + fileSeparator + "results.txt";
         File file = new File(pathName);
         file.delete();
     }
