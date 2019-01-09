@@ -209,7 +209,7 @@ public class Ranker {
 
     /**
      * Get's and Return's all the posting lists from the of the input postingListsIndex.
-     * @param postingListsIndex- queue of postingList index.
+     * @param postingListsIndex- queue of pairs of termID and postingList index.
      * @param size-size of the returned list.
      * @return
      */
