@@ -150,7 +150,7 @@
                      <Insets left="10.0" right="20.0" />
                   </HBox.margin>
                </CheckBox>
-               <CheckBox fx:id="cb_spellCheck" mnemonicParsing="false" text="automaticSpellCheck">
+               <CheckBox fx:id="cb_spellCheck" mnemonicParsing="false" text="automatic spell check (query from files only)">
                   <HBox.margin>
                      <Insets left="10.0" right="20.0" />
                   </HBox.margin>
