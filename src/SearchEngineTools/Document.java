@@ -235,6 +235,11 @@ public class Document{
     }
 //</editor-fold>
 
+    /**
+     * Writes avgDocLength and numOfDocs to DocumentsAdditionalInfo.txt file in the postingFilesPath.
+     * @param avgDocLength- average corpus document length.
+     * @param numOfDocs- number of documents in the corpus.
+     */
     private static void writeAvgDocumentsInfoToDisk(double avgDocLength, int numOfDocs) {
         String fileSeparator=System.getProperty("file.separator");
         String pathName = postingFilesPath + fileSeparator +"DocumentsAdditionalInfo.txt";
@@ -247,6 +252,9 @@ public class Document{
         }
     }
 
+    /**
+     * Loads avgDocLength and numOfDocs to class vars from DocumentsAdditionalInfo.txt file in the postingFilesPath.
+     */
     private static void loadDocumentsInfoLength() {
         String fileSeparator=System.getProperty("file.separator");
         String pathName=postingFilesPath+fileSeparator+"DocumentsAdditionalInfo.txt";
