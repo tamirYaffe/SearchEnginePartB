@@ -24,14 +24,16 @@ public class RankedDocumentDisplayer extends VBox {
 
     private List<Document> toDisplay;
     private List<Button> displayButtons=new ArrayList<>();
+    private Collection<String> stopWords;
 
 
 
-    public RankedDocumentDisplayer(List<Document> toDisplay) {
+    public RankedDocumentDisplayer(List<Document> toDisplay,Collection<String> stopWords) {
         super();
         this.toDisplay = toDisplay;
         addCitiesToDisplay();
         this.setSpacing(20);
+        this.stopWords=stopWords;
     }
 
     private void addCitiesToDisplay(){
@@ -54,6 +56,7 @@ public class RankedDocumentDisplayer extends VBox {
     private void onClickDisplayEntities(Document document){
         actionAllButtons(true);
         EntityParse entityParse = new EntityParse();
+        entityParse.setStopWords(stopWords);
         Collection<ATerm> entities = entityParse.parseDocument(document.getDocLines());
 
         final Stage dialog = new Stage();
