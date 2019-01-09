@@ -235,6 +235,13 @@ public class Parse {
         return toReturn;
     }
 
+    /**
+     * Parses a query
+     * @param queryLines lines of query
+     * @param spellCheck weather to use automatic spell check
+     * @param maxSynonyms maximum amount of synonyms to add for each word
+     * @return all terms in query
+     */
     public List<ATerm> parseQuery(List<String> queryLines, boolean spellCheck, int maxSynonyms){
         QueryTokenList queryTokenList = new QueryTokenList();
         queryTokenList.initialize(queryLines,currencySymbols,delimitersToSplitWordBy,stopWords,spellCheck,maxSynonyms);
