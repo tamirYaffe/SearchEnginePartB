@@ -65,18 +65,23 @@ public class DocumentTokenList extends TextTokenList {
         }
         else {
             while (!documentLines.isEmpty() && !isText){
-                currentLine = documentLines.remove(0);
-                if(currentLine!=null && currentLine.contains("Language: <F P=105>")){
-                    setDocLanguage(currentLine);
-                    return getNextTextLine();
+                try {
+                    currentLine = documentLines.remove(0);
+                    if (currentLine != null && currentLine.contains("Language: <F P=105>")) {
+                        setDocLanguage(currentLine);
+                        return getNextTextLine();
+                    }
+                    if (currentLine.contains("<F P=104>")) {
+                        extractCityTerm(currentLine);
+                        continue;
+                    }
+                    if (currentLine.equals("<TEXT>")) {
+                        isText = true;
+                        return getNextTextLine();
+                    }
                 }
-                if(currentLine.contains("<F P=104>")) {
-                    extractCityTerm(currentLine);
-                    continue;
-                }
-                if(currentLine.equals("<TEXT>")) {
-                    isText = true;
-                    return getNextTextLine();
+                catch (Exception e){
+                    return null;
                 }
             }
         }

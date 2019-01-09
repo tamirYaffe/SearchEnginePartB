@@ -507,7 +507,7 @@ public class View implements Observer{
 
         Scene dialogScene = new Scene(scrollPane, 550, 700);
         dialog.setScene(dialogScene);
-        dialog.setTitle("Query Results fro query: "+query);
+        dialog.setTitle("Query Results from query: "+query);
         dialog.showAndWait();
     }
 
