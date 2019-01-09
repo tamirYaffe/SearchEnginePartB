@@ -9,11 +9,27 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+/**
+ * Gets related  words as needed
+ * Extends text token list (see part A)
+ */
 public class QueryTokenList extends TextTokenList {
 
+    /**
+     * Words that found related words for in query
+     */
    private Collection<Token> foundRelatedWordsFor = new HashSet<>();
+    /**
+     * related words found
+     */
    private List<Token> relatedWords = new ArrayList<>();
+    /**
+     * if true, tokenlist spellchecks, if false then it doesn't
+     */
    private boolean spellCheck;
+    /**
+     * maximum amounts of synonyms to find for each word in the query
+     */
    private int maxSynonyms;
    private DatamuseQuery datamuseQuery = new DatamuseQuery();
 
@@ -28,6 +44,9 @@ public class QueryTokenList extends TextTokenList {
         initialize(documentLines,currencySymbols,delimitersToSplitWordBy,stopWords,false,0);
     }
 
+    /**
+     * sets next token. if needed adds synonyms and similarly spelled words to related word
+     */
     protected void setNext(){
         super.setNext();
         Token next = getNext();
@@ -41,10 +60,18 @@ public class QueryTokenList extends TextTokenList {
         }
     }
 
+    /**
+     * gets all related words
+     * @return related words
+     */
     public List<Token> getRelatedWords(){return relatedWords;}
 
+    /**
+     * adds synonyms to relatedWords
+     * @param token to get synonyms of
+     */
     private void addSynonyms(Token token) {
-        if(foundRelatedWordsFor.contains(token) || !Character.isUpperCase(token.getTokenString().charAt(0)))
+        if(foundRelatedWordsFor.contains(token) || Character.isUpperCase(token.getTokenString().charAt(0)))
             return;
         String tokenString = token.getTokenString();
         List<String> synonyms = datamuseQuery.synonyms(tokenString,maxSynonyms);
@@ -55,6 +82,10 @@ public class QueryTokenList extends TextTokenList {
         foundRelatedWordsFor.add(token);
     }
 
+    /**
+     *
+     * @param token
+     */
     private void spellCheck(Token token) {
         String tokenString = token.getTokenString();
         List<String> spelledLikeList = datamuseQuery.spelledSimilar(tokenString,1);
