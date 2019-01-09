@@ -317,36 +317,7 @@ public class ReadFile {
      * @param filePath- the path of the stop words.
      */
     private void readStopWords(File filePath) {
-        BufferedReader br = null;
-        FileReader fr = null;
-        String line;
-        try {
-            fr = new FileReader(filePath);
-            br = new BufferedReader(fr);
-            while ((line = br.readLine()) != null) {
-                stopWords.add(line);
-            }
-        } catch (IOException e) {
-
-            e.printStackTrace();
-
-        } finally {
-
-            try {
-
-                if (br != null)
-                    br.close();
-
-                if (fr != null)
-                    fr.close();
-
-            } catch (IOException ex) {
-
-                ex.printStackTrace();
-
-            }
-
-        }
+        stopWords=ReadFile.getStopWords(filePath.getPath());
     }
 
     /**
@@ -474,5 +445,46 @@ public class ReadFile {
         String pathName = postingFilesPath + fileSeparator +"results.txt";
         File file = new File(pathName);
         file.delete();
+    }
+
+    /**
+     * Reads and returns the corpus stop words from the input dir path.
+     * @param path- path of the posting file dir.
+     * @return- the corpus stop words.
+     */
+    public static HashSet<String> getStopWords(String path){
+        HashSet<String> stopWords = new HashSet<>();
+        BufferedReader br = null;
+        FileReader fr = null;
+        String line;
+        File file=new File(path);
+        try {
+            fr = new FileReader(file);
+            br = new BufferedReader(fr);
+            while ((line = br.readLine()) != null) {
+                stopWords.add(line);
+            }
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
+        } finally {
+
+            try {
+
+                if (br != null)
+                    br.close();
+
+                if (fr != null)
+                    fr.close();
+
+            } catch (IOException ex) {
+
+                ex.printStackTrace();
+
+            }
+
+        }
+        return stopWords;
     }
 }
