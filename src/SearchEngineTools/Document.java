@@ -51,7 +51,7 @@ public class Document{
         BufferedReader reader;
         try {
             reader = new BufferedReader(new FileReader(path));
-            for (int i = 1; i < startLine; i++) {
+            for (int i = 0; i < startLine; i++) {
                 reader.readLine();
             }
             for (int i = 0; i < numOfLines; i++) {
@@ -167,7 +167,7 @@ public class Document{
 
     //<editor-fold desc="Getters">
     public List<String> getDocLines() {
-        if(docLines==null){
+        if(docLines==null || docLines.isEmpty()){
             docLines=getDocumentsLines();
         }
         return docLines;

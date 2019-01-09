@@ -56,9 +56,10 @@ public class NaturalQueryDisplayer extends MenuBar {
         return toReturn;
     }
 
-    private void changeQuery(Menu toReturn, String s) {
-        int i = this.locationsOfMenus.get(toReturn);
+    private void changeQuery(Menu menu, String s) {
+        int i = this.locationsOfMenus.get(menu);
         query[i]=s;
+        menu.setText(s);
     }
 
     private Map<String,List<String>> getSuggestedQuery(List<String> originalQuery) {
