@@ -238,7 +238,7 @@ public class View implements Observer{
         int postingListPointer=0;
         try {
             String fileName;
-            if(useStemming)
+            if(cb_useStemming.isSelected())
                 fileName="dictionaryStemming.txt";
             else
                 fileName="dictionary.txt";
