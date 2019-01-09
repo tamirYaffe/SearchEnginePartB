@@ -493,7 +493,6 @@ public class View implements Observer{
     }
 
     private void queryFromUser(String query){
-        System.out.println(query);
         model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
         List<Document> rankedDocuments =  model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
         RankedDocumentDisplayer rankedDocumentDisplayer = new RankedDocumentDisplayer(rankedDocuments);
@@ -509,7 +508,7 @@ public class View implements Observer{
 
         Scene dialogScene = new Scene(scrollPane, 550, 700);
         dialog.setScene(dialogScene);
-        dialog.setTitle("Query Results");
+        dialog.setTitle("Query Results fro query: "+query);
         dialog.showAndWait();
     }
 

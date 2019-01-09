@@ -72,7 +72,7 @@ public class RankedDocumentDisplayer extends VBox {
         });
         Scene dialogScene = new Scene(dialogVbox, 550, 230);
         dialog.setScene(dialogScene);
-        dialog.setTitle("Entities:");
+        dialog.setTitle("Entities for document: "+document.getDOCNO());
         dialog.showAndWait();
         actionAllButtons(false);
     }
