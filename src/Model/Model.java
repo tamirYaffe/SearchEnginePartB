@@ -140,4 +140,8 @@ public class Model extends Observable {
         return indexer.getDictionarySize();
     }
 
+    public Collection<String> getStopWords(String corpusPath){
+        return ReadFile.getStopWords(corpusPath);
+    }
+
 }

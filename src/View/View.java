@@ -64,7 +64,7 @@ public class View implements Observer{
     public TextField tf_queryFilePath;
     public Button btn_queryResultFilesPath;
     public TextField tf_queryResultFilePath;
-    public Button btn_filteByCities;
+    public Button btn_filterByCities;
     public JTextArea jTextArea;
 
 
@@ -353,7 +353,7 @@ public class View implements Observer{
         tf_queryFilePath.setEditable(!disable);
         btn_queryResultFilesPath.setDisable(disable);
         tf_queryResultFilePath.setEditable(!disable);
-        btn_filteByCities.setDisable(disable);
+        btn_filterByCities.setDisable(disable);
     }
 
     /**
@@ -493,9 +493,8 @@ public class View implements Observer{
     }
 
     private void queryFromUser(String query){
-        model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
         List<Document> rankedDocuments =  model.queryNaturalLanguage(query,tf_postingListPath.getText(),cb_useStemming.isSelected(),cb_useSemantics.isSelected(),tf_queryResultFilePath.getText(),tf_corpusPath.getText());
-        RankedDocumentDisplayer rankedDocumentDisplayer = new RankedDocumentDisplayer(rankedDocuments);
+        RankedDocumentDisplayer rankedDocumentDisplayer = new RankedDocumentDisplayer(rankedDocuments,model.getStopWords(tf_corpusPath.getText()));
 
         final Stage dialog = new Stage();
         dialog.initModality(Modality.WINDOW_MODAL);
