@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class RankedDocumentDisplayer extends ListView {
+public class RankedDocumentDisplayer extends VBox {
 
     private List<Document> toDisplay;
     private List<Button> displayButtons=new ArrayList<>();
@@ -31,6 +31,7 @@ public class RankedDocumentDisplayer extends ListView {
         super();
         this.toDisplay = toDisplay;
         addCitiesToDisplay();
+        this.setSpacing(20);
     }
 
     private void addCitiesToDisplay(){
@@ -45,8 +46,8 @@ public class RankedDocumentDisplayer extends ListView {
             });
             hBox.getChildren().addAll(label,entities);
             Label empty = new Label();
-//            this.getChildren().add(hBox);
-            this.getItems().addAll(label,entities, empty);
+            this.getChildren().add(hBox);
+//            this.getChildren().addAll(label,entities, empty);
         }
     }
 
@@ -71,7 +72,7 @@ public class RankedDocumentDisplayer extends ListView {
         });
         Scene dialogScene = new Scene(dialogVbox, 550, 230);
         dialog.setScene(dialogScene);
-        dialog.setTitle("Entities:");
+        dialog.setTitle("Entities for document: "+document.getDOCNO());
         dialog.showAndWait();
         actionAllButtons(false);
     }
