@@ -6,10 +6,10 @@ import SearchEngineTools.ParsingTools.TokenList.ITokenList;
 import javax.swing.text.html.parser.Entity;
 import java.util.*;
 
+/**
+ * Used to parse retrieve all entities. Parses Document only adds entities to list
+ */
 public class EntityParse extends Parse {
-
-
-
 
 
     private PriorityQueue<ATerm> maxQueue = new PriorityQueue<>(new Comparator<ATerm>() {
@@ -27,7 +27,7 @@ public class EntityParse extends Parse {
 
 
     /**
-     * Add term to map of terms
+     * Add term to map of terms only if it is an entity
      * @param term term to add
      * @param occurrencesList map to add to
      */
@@ -35,6 +35,12 @@ public class EntityParse extends Parse {
         if(isEntity(term))
             super.addTermToOccurrencesList(term,occurrencesList);
     }
+
+    /**
+     *gets most significant entities
+     * @param occurrencesOfTerms terms and their occurrences in document
+     * @return 5 most significant terms according to our ranking algorithm
+     */
     @Override
     protected List<ATerm> getFinalTermCollection(Map<String, ATerm> occurrencesOfTerms) {
         ArrayList<ATerm> toReturn = new ArrayList<>(occurrencesOfTerms.size());
@@ -81,6 +87,7 @@ public class EntityParse extends Parse {
     protected boolean isEntity(ATerm term){
         return (term instanceof WordTerm) && Character.isUpperCase(term.getTerm().charAt(0));
     }
+
 }
 
 

@@ -86,6 +86,10 @@ public class View implements Observer{
         onClickOpenFileSystem(tf_corpusPath);
     }
 
+    /**
+     * opens file system and sets selected folder path to textfield
+     * @param pathTextField
+     */
     private void onClickOpenFileSystem(TextField pathTextField){
         actionAllButtons(true);
         String selectedDirectory = openFileSystem();
@@ -102,10 +106,17 @@ public class View implements Observer{
         onClickOpenFileSystem(tf_postingListPath);
     }
 
+    /**
+     * opens file system to locate query file path
+     */
     public void onClickQueryFileSystem(){
         onClickChooseFile(tf_queryFilePath);
     }
 
+    /**
+     * opens file system and chooses file. place path of file in text field
+     * @param pathTextField textfield to get path of
+     */
     private void onClickChooseFile(TextField pathTextField){
         actionAllButtons(true);
         final FileChooser fileChooser = new FileChooser();
@@ -120,36 +131,13 @@ public class View implements Observer{
         actionAllButtons(false);
     }
 
-
-
-    private void executeNaturalLanguageQuery(String text) {
-        //get original query
-        List<String> originalQuery = new ArrayList<>();
-        for (int indexOfSpace = text.indexOf(' '); indexOfSpace!=-1; indexOfSpace = text.indexOf(' ')){
-            String word = text.substring(0,indexOfSpace);
-            if(!(word.equals("") || word.equals(" ")))
-                originalQuery.add(word);
-            text=text.substring(indexOfSpace+1);
-        }
-        //showSuggestedQuery(originalQuery);
-    }
-
-
-
-    private void setQueryWord(Menu menu, CheckMenuItem checkMenuItemToEnable) {
-        ObservableList<MenuItem> checkMenuItems=menu.getItems();
-        for (MenuItem menuItem:checkMenuItems) {
-            if(menuItem.equals(checkMenuItemToEnable)){
-                CheckMenuItem checkMenuItem = (CheckMenuItem) menuItem;
-                checkMenuItem.setSelected(true);
-            }
-        }
-    }
-
+    /**
+     * turns user text into list of words. used in construction natural language displayer object
+     * @return
+     */
     private List<String> getNaturalLanguageText() {
         String queryFieldText = this.tf_naturalLanguageQuery.getText();
         List<String> toReturn = new ArrayList<>();
-        int indexOfNextSpace = queryFieldText.indexOf(' ');
         TextTokenList textTokenList = new TextTokenList();
         List<String> queryAsList = new ArrayList<>();
         queryAsList.add(queryFieldText);
@@ -162,13 +150,6 @@ public class View implements Observer{
             toReturn.add(textTokenList.pop().getTokenString());
         }
         return toReturn;
-    }
-
-    private void showAndWaitFailedQueryAlert(String problem){
-        Alert bothFields = new Alert(Alert.AlertType.ERROR);
-        bothFields.setHeaderText("Please Specify a Single Query");
-        bothFields.setHeaderText("Both Query Fields are "+problem);
-        bothFields.setContentText("Please insert natural language query or select a queries file from which to query");
     }
 
 
@@ -210,7 +191,7 @@ public class View implements Observer{
 
     /**
      * Loads the dictionary from the input posting files path to the indexer memory.
-     * dictionary load is determine by the use stemming check box.
+     * dictionary load is determine by the use stemming check box. Restarts city index
      */
     public void onClickLoadDictionary(){
         actionAllButtons(true);
@@ -232,6 +213,7 @@ public class View implements Observer{
         }
         actionAllButtons(false);
     }
+
 
     private Map<String,Pair<Integer,Integer>> getDictionary(){
         Map<String, Pair<Integer,Integer>> dictionary=new HashMap<>();
@@ -420,6 +402,9 @@ public class View implements Observer{
         alert.showAndWait();
     }
 
+    /**
+     * Displays window to start query. Displays suggested query and runs user's natural language query as needed
+     */
     public void onClickNaturalLanguageQuery(){
         actionAllButtons(true);
 
@@ -492,6 +477,7 @@ public class View implements Observer{
         actionAllButtons(false);
     }
 
+
     private void queryFromUser(String query){
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Running query "+'"'+query+'"');
@@ -515,40 +501,11 @@ public class View implements Observer{
         dialog.showAndWait();
     }
 
-    private void query(List<String> query) {
-        /*Map<String,Pair<Integer,Integer>> dictionary = getDictionary();
-        String corpusPath;
-        if(tf_corpusPath.getText().length()!=0)
-                corpusPath = tf_corpusPath.getText();
-        else {
-            Alert enterCorpusPath = new Alert(Alert.AlertType.ERROR);
-            enterCorpusPath.setTitle("no path for corpus path");
-            enterCorpusPath.setContentText("Please enter corpus path in specified text-field");
-            enterCorpusPath.setHeaderText("");
-            enterCorpusPath.showAndWait();
-            return;
-        }
-        if(tf_postingListPath.getText().length()==0){
-            Alert enterCorpusPath = new Alert(Alert.AlertType.ERROR);
-            enterCorpusPath.setTitle("no path for corpus path");
-            enterCorpusPath.setContentText("Please enter posting list path in specified text-field");
-            enterCorpusPath.setHeaderText("");
-            enterCorpusPath.showAndWait();
-            return;
-        }
-        Ranker ranker = new Ranker(dictionary,tf_postingListPath.getText(),useStemming,Integer.MAX_VALUE);
-        ReadFile readFile = new ReadFile(new Indexer(),corpusPath,tf_postingListPath.getText(),useStemming);
-        boolean useSemantics = cb_useSemantics.isSelected();
-        readFile.setRanker(ranker);
-        List<>
 
-
-    }
-
-    private void query(String text) {
-    }*/
-    }
-
+    /**
+     * Open city filter and allow user to filter results by cities
+     * @param actionEvent
+     */
     public void onClickFilterByCities(ActionEvent actionEvent) {
         actionAllButtons(true);
         try {
@@ -612,6 +569,9 @@ public class View implements Observer{
         }
     }
 
+    /**
+     * run queries on all querries in a file
+     */
     public void onClickQueryFiles(){
         actionAllButtons(true);
         if(tf_queryFilePath.getText().length()==0){
@@ -663,6 +623,10 @@ public class View implements Observer{
         actionAllButtons(false);
     }
 
+    /**
+     * open file system and allow user to choose location of results file
+     * @param actionEvent
+     */
     public void onClickQueryResultFileSystem(ActionEvent actionEvent) {
         onClickOpenFileSystem(tf_queryResultFilePath);
     }
