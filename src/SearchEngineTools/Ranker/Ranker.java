@@ -16,13 +16,28 @@ import java.util.*;
  */
 public class Ranker {
     //List of ranked documents
+    /**
+     * List of ranked Documents
+     */
     private List <Document> rankedDocs;
 
-    //The corpus dictionary loadad by useStemming value.
+    //
+    /**
+     * The Corpus's dictionary (stemmed corresponding to the stemm field)
+     */
     private Map<String, Pair<Integer, Integer>> dictionary;
 
+    /**
+     * Maximal amount of documents returned for a query
+     */
     private int numOfDocumentsToReturn=50;
+    /**
+     * path to posting path
+     */
     private  String postingFilesPath;
+    /**
+     * whether or not use stemming
+     */
     private  boolean useStemming;
 
     //queues for keeping only numOfDocumentsToReturn while ranking documents.
